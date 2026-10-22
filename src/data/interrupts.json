@@ -1,0 +1,270 @@
+[
+  {
+    "id": 16,
+    "name": "BMX_DSP_BUS_ERR"
+  },
+  {
+    "id": 17,
+    "name": "D0_RESERVED1"
+  },
+  {
+    "id": 18,
+    "name": "D0_RESERVED2"
+  },
+  {
+    "id": 19,
+    "name": "D0_RESERVED3"
+  },
+  {
+    "id": 20,
+    "name": "UART3"
+  },
+  {
+    "id": 21,
+    "name": "I2C2"
+  },
+  {
+    "id": 22,
+    "name": "I2C3"
+  },
+  {
+    "id": 23,
+    "name": "SPI1"
+  },
+  {
+    "id": 24,
+    "name": "D0_RESERVED4"
+  },
+  {
+    "id": 25,
+    "name": "D0_RESERVED5"
+  },
+  {
+    "id": 26,
+    "name": "SEOF_INT0"
+  },
+  {
+    "id": 27,
+    "name": "SEOF_INT1"
+  },
+  {
+    "id": 28,
+    "name": "SEOF_INT2"
+  },
+  {
+    "id": 29,
+    "name": "DVP2BUS_INT0"
+  },
+  {
+    "id": 30,
+    "name": "DVP2BUS_INT1"
+  },
+  {
+    "id": 31,
+    "name": "DVP2BUS_INT2"
+  },
+  {
+    "id": 32,
+    "name": "DVP2BUS_INT3"
+  },
+  {
+    "id": 33,
+    "name": "H264_BS"
+  },
+  {
+    "id": 34,
+    "name": "H264_FRAME"
+  },
+  {
+    "id": 35,
+    "name": "H264_SEQ_DONE"
+  },
+  {
+    "id": 36,
+    "name": "MJPEG"
+  },
+  {
+    "id": 37,
+    "name": "H264_S_BS"
+  },
+  {
+    "id": 38,
+    "name": "H264_S_FRAME"
+  },
+  {
+    "id": 39,
+    "name": "H264_S_SEQ_DONE"
+  },
+  {
+    "id": 40,
+    "name": "DMA2_INT0"
+  },
+  {
+    "id": 41,
+    "name": "DMA2_INT1"
+  },
+  {
+    "id": 42,
+    "name": "DMA2_INT2"
+  },
+  {
+    "id": 43,
+    "name": "DMA2_INT3"
+  },
+  {
+    "id": 44,
+    "name": "DMA2_INT4"
+  },
+  {
+    "id": 45,
+    "name": "DMA2_INT5"
+  },
+  {
+    "id": 46,
+    "name": "DMA2_INT6"
+  },
+  {
+    "id": 47,
+    "name": "DMA2_INT7"
+  },
+  {
+    "id": 48,
+    "name": "SDH_MMC1"
+  },
+  {
+    "id": 49,
+    "name": "SDH_MMC3"
+  },
+  {
+    "id": 50,
+    "name": "SDH2PMU_WAKEUP1"
+  },
+  {
+    "id": 51,
+    "name": "SDH2PMU_WAKEUP3"
+  },
+  {
+    "id": 52,
+    "name": "EMAC2"
+  },
+  {
+    "id": 53,
+    "name": "MIPI_CSI"
+  },
+  {
+    "id": 54,
+    "name": "IPC_D0"
+  },
+  {
+    "id": 55,
+    "name": "APU"
+  },
+  {
+    "id": 56,
+    "name": "MJDEC"
+  },
+  {
+    "id": 57,
+    "name": "DVP2BUS_INT4"
+  },
+  {
+    "id": 58,
+    "name": "DVP2BUS_INT5"
+  },
+  {
+    "id": 59,
+    "name": "DVP2BUS_INT6"
+  },
+  {
+    "id": 60,
+    "name": "DVP2BUS_INT7"
+  },
+  {
+    "id": 61,
+    "name": "DMA2D_INT0"
+  },
+  {
+    "id": 62,
+    "name": "DMA2D_INT1"
+  },
+  {
+    "id": 63,
+    "name": "DISPLAY"
+  },
+  {
+    "id": 64,
+    "name": "PWM"
+  },
+  {
+    "id": 65,
+    "name": "SEOF_INT3"
+  },
+  {
+    "id": 66,
+    "name": "RESERVED1"
+  },
+  {
+    "id": 67,
+    "name": "RESERVED2"
+  },
+  {
+    "id": 68,
+    "name": "OSD"
+  },
+  {
+    "id": 69,
+    "name": "DBI"
+  },
+  {
+    "id": 70,
+    "name": "D0_RESERVED6"
+  },
+  {
+    "id": 71,
+    "name": "OSDA_BUS_DRAIN"
+  },
+  {
+    "id": 72,
+    "name": "OSDB_BUS_DRAIN"
+  },
+  {
+    "id": 73,
+    "name": "OSD_PB"
+  },
+  {
+    "id": 74,
+    "name": "D0_RESERVED7"
+  },
+  {
+    "id": 75,
+    "name": "MIPI_DSI"
+  },
+  {
+    "id": 76,
+    "name": "D0_RESERVED8"
+  },
+  {
+    "id": 77,
+    "name": "TIMER1_CH0"
+  },
+  {
+    "id": 78,
+    "name": "TIMER1_CH1"
+  },
+  {
+    "id": 79,
+    "name": "TIMER1_WDT"
+  },
+  {
+    "id": 80,
+    "name": "AUDIO"
+  },
+  {
+    "id": 81,
+    "name": "WL_ALL"
+  },
+  {
+    "id": 82,
+    "name": "PDS"
+  }
+]

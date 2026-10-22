@@ -1,0 +1,54 @@
+---
+title: "MCU forwarding / M0IC"
+description: "MCU interrupt status, mask and clear controls forwarding SDH to D0."
+---
+
+import Register from '../../../components/Register.astro';
+import RegisterIndex from '../../../components/RegisterIndex.astro';
+
+The MCU interrupt-forwarding controls lie in GLB at `0x20000050` through `0x20000064`. The SDK calls their fields `np_int_sta*`, `np_int_mask*` and `np_int_clr*`; the board experiments call this block **M0IC**.
+
+## SDH delivery path
+
+The M1s Dock RAM experiment observed this complete route:
+
+```text
+SDH event → MCU forwarding source 17 → PLIC source 81
+          → D0 supervisor external interrupt → handler
+```
+
+For a successful CMD8 command, the handler recorded:
+
+| Observation | Value | Meaning |
+| --- | --- | --- |
+| `scause` | `0x8000000000000009` | Supervisor external interrupt |
+| PLIC claim | `0x51` | Source 81 |
+| MCU status word 0 | `0x00020000` | Bit 17 set |
+| SDH status | `0x00000001` | Command complete without an error |
+| CMD8 response | `0x000001aa` | Fresh R7 response with the requested echo |
+
+Source 81 is named `WL_ALL` in the D0 SDK enumeration. The child index 17 and the PLIC claim 81 identify different controllers. The successful SDH observation establishes this specific forwarding route.
+
+## Masking and acknowledgement
+
+A one in a mask bit masks that child source. Masking delivery does not clear status that is already latched. Clear registers use write-one-to-clear semantics.
+
+The tested handler quiesced CPU delivery, claimed the PLIC source, captured the SDH and MCU status, masked further signaling, cleared the SDH event and MCU bit 17, ordered the MMIO accesses, and completed the PLIC claim. The surrounding diagnostic restored saved writable configuration before returning to U-Boot.
+
+The relevant SDH registers are its event status at `0x20060030`, status-enable at `0x20060034`, and signal-enable at `0x20060038`. A source can have an event status without signaling an interrupt if one of these layers suppresses delivery.
+
+## Registers
+
+<RegisterIndex ids={["m0ic-status0", "m0ic-status1", "m0ic-mask0", "m0ic-mask1", "m0ic-clear0", "m0ic-clear1"]} />
+
+<Register id="m0ic-status0" />
+
+<Register id="m0ic-status1" />
+
+<Register id="m0ic-mask0" />
+
+<Register id="m0ic-mask1" />
+
+<Register id="m0ic-clear0" />
+
+<Register id="m0ic-clear1" />

@@ -1,0 +1,1222 @@
+{
+  "cpu-rtc": {
+    "name": "CPU_RTC",
+    "base": "0x30000000",
+    "offset": "0x18",
+    "width": 32,
+    "reset": "0x0000000a",
+    "summary": "C906 time-counter divider, clock enable and reset control.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/mm_misc_reg.h#L657",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 mm_misc_reg.h",
+    "fields": [
+      {
+        "name": "c906_rtc_div",
+        "lsb": 0,
+        "width": 10,
+        "access": "RW",
+        "reset": "0xa",
+        "description": "Counter clock divisor minus one. The SDK computes the counter rate from the D0 core clock divided by this field plus one."
+      },
+      {
+        "name": "c906_rtc_rst",
+        "lsb": 30,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "Counter reset control. The SDK asserts this bit and then clears it to release reset."
+      },
+      {
+        "name": "c906_rtc_en",
+        "lsb": 31,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "Set to enable the counter clock; clear to stop the counter clock."
+      }
+    ]
+  },
+  "glb-system": {
+    "name": "SYS_CFG0",
+    "base": "0x20000000",
+    "offset": "0x90",
+    "width": 32,
+    "reset": "0x0000000f",
+    "summary": "MCU clock dividers and bus gates.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/glb_reg.h#L9489",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 glb_reg.h",
+    "fields": [
+      {
+        "name": "reg_hclk_en",
+        "lsb": 2,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "MCU high-speed bus clock gate."
+      },
+      {
+        "name": "reg_bclk_en",
+        "lsb": 3,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "MCU peripheral bus clock gate."
+      },
+      {
+        "name": "reg_hclk_div",
+        "lsb": 8,
+        "width": 8,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "MCU core/high-speed clock divisor minus one."
+      },
+      {
+        "name": "reg_bclk_div",
+        "lsb": 16,
+        "width": 8,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "MCU bus clock divisor minus one."
+      }
+    ]
+  },
+  "glb-sdh": {
+    "name": "SDH_CFG0",
+    "base": "0x20000000",
+    "offset": "0x430",
+    "width": 32,
+    "reset": "0x00002000",
+    "summary": "SDH module clock selection, divider and enable.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/glb_reg.h#L10141",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 glb_reg.h",
+    "fields": [
+      {
+        "name": "reg_sdh_clk_div",
+        "lsb": 9,
+        "width": 3,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "SDH module clock divisor minus one."
+      },
+      {
+        "name": "reg_sdh_clk_sel",
+        "lsb": 12,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "0 selects the WIFIPLL divide-by-five branch; 1 selects the CPUPLL SDH branch."
+      },
+      {
+        "name": "reg_sdh_clk_en",
+        "lsb": 13,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "SDH module clock enable. The bus gate is controlled separately."
+      }
+    ]
+  },
+  "glb-gates": {
+    "name": "CGEN_CFG2",
+    "base": "0x20000000",
+    "offset": "0x588",
+    "width": 32,
+    "reset": "0x0fff0c11",
+    "summary": "Peripheral bus clock gates; the SDH field is shown here.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/glb_reg.h#L10421",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 glb_reg.h",
+    "fields": [
+      {
+        "name": "cgen_s1_ext_sdh",
+        "lsb": 22,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "SDH bus clock enable. This gate is separate from SDH_CFG0 module-clock enable."
+      }
+    ]
+  },
+  "hbn-glb": {
+    "name": "HBN_GLB",
+    "base": "0x2000f000",
+    "offset": "0x30",
+    "width": 32,
+    "reset": "0xaa0a0000",
+    "summary": "Root and UART clock selectors in the always-on clock domain.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/hbn_reg.h#L735",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 hbn_reg.h",
+    "fields": [
+      {
+        "name": "hbn_root_clk_sel",
+        "lsb": 0,
+        "width": 2,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "Bit 0 selects XCLK: 0 RC32M, 1 XTAL. Bit 1 selects the MCU root: 0 XCLK, 1 PDS PLL branch."
+      },
+      {
+        "name": "hbn_uart_clk_sel",
+        "lsb": 2,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "Selects the first UART clock mux: 0 BCLK, 1 the MCU mux-PLL branch."
+      },
+      {
+        "name": "hbn_uart_clk_sel2",
+        "lsb": 15,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "Selects the UART parent: 0 first UART mux, 1 XCLK."
+      }
+    ]
+  },
+  "pds-cpu": {
+    "name": "CPU_CORE_CFG1",
+    "base": "0x2000e000",
+    "offset": "0x114",
+    "width": 32,
+    "reset": "0x00000130",
+    "summary": "PDS PLL selection and MCU clock gate.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/pds_reg.h#L1922",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 pds_reg.h",
+    "fields": [
+      {
+        "name": "reg_pll_sel",
+        "lsb": 4,
+        "width": 2,
+        "access": "RW",
+        "reset": "0x3",
+        "description": "PDS PLL parent selector: 0 CPUPLL branch, 1 AUPLL divide-by-one, 2 WIFIPLL 240M branch, 3 WIFIPLL 320M branch. These are SDK branch identifiers."
+      },
+      {
+        "name": "reg_mcu1_clk_en",
+        "lsb": 8,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "MCU clock enable associated with the PDS PLL path."
+      }
+    ]
+  },
+  "mm-control": {
+    "name": "MM_CLK_CTRL_CPU",
+    "base": "0x30007000",
+    "offset": "0x0",
+    "width": 32,
+    "reset": "0x0510000f",
+    "summary": "MM clock-source selectors, D0 gate and divider handshake.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/mm_glb_reg.h#L518",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 mm_glb_reg.h",
+    "fields": [
+      {
+        "name": "reg_uart_clk_sel",
+        "lsb": 4,
+        "width": 2,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "UART parent selector: 0 MM_BCLK1X, 1 MM_MUXPLL_160M, 2 MM_XCLK."
+      },
+      {
+        "name": "reg_cpu_clk_sel",
+        "lsb": 8,
+        "width": 2,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "PLL-path selector: 0 MM_MUXPLL_240M, 1 MM_MUXPLL_320M, 2 or 3 CPUPLL_400M. Branch names are hardware/software identifiers."
+      },
+      {
+        "name": "reg_xclk_clk_sel",
+        "lsb": 10,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "MM_XCLK source: 0 RC32M, 1 XTAL."
+      },
+      {
+        "name": "reg_cpu_root_clk_sel",
+        "lsb": 11,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "D0 root source: 0 MM_XCLK, 1 the PLL-path mux."
+      },
+      {
+        "name": "reg_mmcpu0_clk_en",
+        "lsb": 12,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "D0/C906 core clock gate."
+      },
+      {
+        "name": "reg_bclk1x_sel",
+        "lsb": 13,
+        "width": 2,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "MM_BCLK1X parent: 0 or 1 MM_XCLK, 2 MM_MUXPLL_160M, 3 MM_MUXPLL_240M."
+      },
+      {
+        "name": "reg_bclk2x_div_act_pulse",
+        "lsb": 18,
+        "width": 1,
+        "access": "W1P",
+        "reset": "0x0",
+        "description": "Write one to request application of the BCLK2X divider setting."
+      },
+      {
+        "name": "sts_bclk2x_prot_done",
+        "lsb": 20,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x1",
+        "description": "Divider-change handshake status read by the SDK."
+      }
+    ]
+  },
+  "mm-dividers": {
+    "name": "MM_CLK_CPU",
+    "base": "0x30007000",
+    "offset": "0x4",
+    "width": 32,
+    "reset": "0x00000100",
+    "summary": "D0 and multimedia bus clock dividers.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/mm_glb_reg.h#L545",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 mm_glb_reg.h",
+    "fields": [
+      {
+        "name": "reg_cpu_clk_div",
+        "lsb": 0,
+        "width": 8,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "D0 core clock divisor minus one."
+      },
+      {
+        "name": "reg_bclk2x_div",
+        "lsb": 16,
+        "width": 8,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "MM_BCLK2X divisor minus one."
+      },
+      {
+        "name": "reg_bclk1x_div",
+        "lsb": 24,
+        "width": 8,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "MM_BCLK1X divisor minus one."
+      }
+    ]
+  },
+  "mm-peripheral": {
+    "name": "MM_CLK_CTRL_PERI",
+    "base": "0x30007000",
+    "offset": "0x10",
+    "width": 32,
+    "reset": "0x00810300",
+    "summary": "UART3 source-clock divider fields.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/mm_glb_reg.h#L586",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 mm_glb_reg.h",
+    "fields": [
+      {
+        "name": "reg_uart0_clk_div_en",
+        "lsb": 16,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "Clock divider enable for MM UART0, the UART3 instance at 0x30002000."
+      },
+      {
+        "name": "reg_uart0_clk_div",
+        "lsb": 17,
+        "width": 3,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "MM UART0/UART3 source clock divisor minus one."
+      }
+    ]
+  },
+  "uart-tx": {
+    "name": "UTX_CONFIG",
+    "base": "0x30002000",
+    "offset": "0x0",
+    "width": 32,
+    "reset": "0x00008f00",
+    "summary": "Transmitter configuration; fields used by the polling console are shown.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/uart_reg.h#L662",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 uart_reg.h",
+    "fields": [
+      {
+        "name": "cr_utx_en",
+        "lsb": 0,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "Transmitter enable."
+      },
+      {
+        "name": "cr_utx_frm_en",
+        "lsb": 2,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "TX free-running mode; used by the polling console driver."
+      },
+      {
+        "name": "cr_utx_bit_cnt_d",
+        "lsb": 8,
+        "width": 3,
+        "access": "RW",
+        "reset": "0x7",
+        "description": "Data-bit count encoding; the console uses 7 for eight data bits."
+      },
+      {
+        "name": "cr_utx_bit_cnt_p",
+        "lsb": 11,
+        "width": 2,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "Stop-bit period encoding; the console uses 1 for one stop bit."
+      }
+    ]
+  },
+  "uart-rx": {
+    "name": "URX_CONFIG",
+    "base": "0x30002000",
+    "offset": "0x4",
+    "width": 32,
+    "reset": "0x00000700",
+    "summary": "Receiver configuration; fields used by the polling console are shown.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/uart_reg.h#L681",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 uart_reg.h",
+    "fields": [
+      {
+        "name": "cr_urx_en",
+        "lsb": 0,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "Receiver enable."
+      },
+      {
+        "name": "cr_urx_bit_cnt_d",
+        "lsb": 8,
+        "width": 3,
+        "access": "RW",
+        "reset": "0x7",
+        "description": "Data-bit count encoding; the console uses 7 for eight data bits."
+      }
+    ]
+  },
+  "uart-period": {
+    "name": "UART_BIT_PRD",
+    "base": "0x30002000",
+    "offset": "0x8",
+    "width": 32,
+    "reset": "0x00ff00ff",
+    "summary": "Independent TX and RX bit-period dividers.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/uart_reg.h#L700",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 uart_reg.h",
+    "fields": [
+      {
+        "name": "cr_utx_bit_prd",
+        "lsb": 0,
+        "width": 16,
+        "access": "RW",
+        "reset": "0xff",
+        "description": "TX bit-period divider minus one."
+      },
+      {
+        "name": "cr_urx_bit_prd",
+        "lsb": 16,
+        "width": 16,
+        "access": "RW",
+        "reset": "0xff",
+        "description": "RX bit-period divider minus one."
+      }
+    ]
+  },
+  "uart-status": {
+    "name": "UART_INT_STS",
+    "base": "0x30002000",
+    "offset": "0x20",
+    "width": 32,
+    "reset": "0x00000004",
+    "summary": "UART interrupt status. FIFO-ready conditions reflect the FIFO state.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/uart_reg.h#L757",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 uart_reg.h",
+    "fields": [
+      {
+        "name": "utx_end_int",
+        "lsb": 0,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "TX end int."
+      },
+      {
+        "name": "urx_end_int",
+        "lsb": 1,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "RX end int."
+      },
+      {
+        "name": "utx_frdy_int",
+        "lsb": 2,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x1",
+        "description": "TX frdy int."
+      },
+      {
+        "name": "urx_frdy_int",
+        "lsb": 3,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "RX frdy int."
+      },
+      {
+        "name": "urx_rto_int",
+        "lsb": 4,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "RX rto int."
+      },
+      {
+        "name": "urx_pce_int",
+        "lsb": 5,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "RX pce int."
+      },
+      {
+        "name": "utx_fer_int",
+        "lsb": 6,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "TX fer int."
+      },
+      {
+        "name": "urx_fer_int",
+        "lsb": 7,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "RX fer int."
+      },
+      {
+        "name": "urx_lse_int",
+        "lsb": 8,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "RX lse int."
+      },
+      {
+        "name": "urx_bcr_int",
+        "lsb": 9,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "RX bcr int."
+      },
+      {
+        "name": "urx_ads_int",
+        "lsb": 10,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "RX ads int."
+      },
+      {
+        "name": "urx_ad5_int",
+        "lsb": 11,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "RX ad5 int."
+      }
+    ]
+  },
+  "uart-mask": {
+    "name": "UART_INT_MASK",
+    "base": "0x30002000",
+    "offset": "0x24",
+    "width": 32,
+    "reset": "0x00000fff",
+    "summary": "Interrupt mask: one masks the named source; zero unmasks it.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/uart_reg.h#L777",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 uart_reg.h",
+    "fields": [
+      {
+        "name": "cr_utx_end_mask",
+        "lsb": 0,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "TX end mask."
+      },
+      {
+        "name": "cr_urx_end_mask",
+        "lsb": 1,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX end mask."
+      },
+      {
+        "name": "cr_utx_frdy_mask",
+        "lsb": 2,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "TX frdy mask."
+      },
+      {
+        "name": "cr_urx_frdy_mask",
+        "lsb": 3,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX frdy mask."
+      },
+      {
+        "name": "cr_urx_rto_mask",
+        "lsb": 4,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX rto mask."
+      },
+      {
+        "name": "cr_urx_pce_mask",
+        "lsb": 5,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX pce mask."
+      },
+      {
+        "name": "cr_utx_fer_mask",
+        "lsb": 6,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "TX fer mask."
+      },
+      {
+        "name": "cr_urx_fer_mask",
+        "lsb": 7,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX fer mask."
+      },
+      {
+        "name": "cr_urx_lse_mask",
+        "lsb": 8,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX lse mask."
+      },
+      {
+        "name": "cr_urx_bcr_mask",
+        "lsb": 9,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX bcr mask."
+      },
+      {
+        "name": "cr_urx_ads_mask",
+        "lsb": 10,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX ads mask."
+      },
+      {
+        "name": "cr_urx_ad5_mask",
+        "lsb": 11,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX ad5 mask."
+      }
+    ]
+  },
+  "uart-clear": {
+    "name": "UART_INT_CLEAR",
+    "base": "0x30002000",
+    "offset": "0x28",
+    "width": 32,
+    "reset": "0x00000000",
+    "summary": "Write-one-to-clear interrupt latches. FIFO-ready conditions have no clear bits.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/uart_reg.h#L797",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 uart_reg.h",
+    "fields": [
+      {
+        "name": "cr_utx_end_clr",
+        "lsb": 0,
+        "width": 1,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "TX end clr."
+      },
+      {
+        "name": "cr_urx_end_clr",
+        "lsb": 1,
+        "width": 1,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "RX end clr."
+      },
+      {
+        "name": "cr_urx_rto_clr",
+        "lsb": 4,
+        "width": 1,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "RX rto clr."
+      },
+      {
+        "name": "cr_urx_pce_clr",
+        "lsb": 5,
+        "width": 1,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "RX pce clr."
+      },
+      {
+        "name": "cr_urx_lse_clr",
+        "lsb": 8,
+        "width": 1,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "RX lse clr."
+      },
+      {
+        "name": "cr_urx_bcr_clr",
+        "lsb": 9,
+        "width": 1,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "RX bcr clr."
+      },
+      {
+        "name": "cr_urx_ads_clr",
+        "lsb": 10,
+        "width": 1,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "RX ads clr."
+      },
+      {
+        "name": "cr_urx_ad5_clr",
+        "lsb": 11,
+        "width": 1,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "RX ad5 clr."
+      }
+    ]
+  },
+  "uart-enable": {
+    "name": "UART_INT_EN",
+    "base": "0x30002000",
+    "offset": "0x2c",
+    "width": 32,
+    "reset": "0x00000fff",
+    "summary": "UART interrupt enable controls.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/uart_reg.h#L817",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 uart_reg.h",
+    "fields": [
+      {
+        "name": "cr_utx_end_en",
+        "lsb": 0,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "TX end en."
+      },
+      {
+        "name": "cr_urx_end_en",
+        "lsb": 1,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX end en."
+      },
+      {
+        "name": "cr_utx_frdy_en",
+        "lsb": 2,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "TX frdy en."
+      },
+      {
+        "name": "cr_urx_frdy_en",
+        "lsb": 3,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX frdy en."
+      },
+      {
+        "name": "cr_urx_rto_en",
+        "lsb": 4,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX rto en."
+      },
+      {
+        "name": "cr_urx_pce_en",
+        "lsb": 5,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX pce en."
+      },
+      {
+        "name": "cr_utx_fer_en",
+        "lsb": 6,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "TX fer en."
+      },
+      {
+        "name": "cr_urx_fer_en",
+        "lsb": 7,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX fer en."
+      },
+      {
+        "name": "cr_urx_lse_en",
+        "lsb": 8,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX lse en."
+      },
+      {
+        "name": "cr_urx_bcr_en",
+        "lsb": 9,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX bcr en."
+      },
+      {
+        "name": "cr_urx_ads_en",
+        "lsb": 10,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX ads en."
+      },
+      {
+        "name": "cr_urx_ad5_en",
+        "lsb": 11,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x1",
+        "description": "RX ad5 en."
+      }
+    ]
+  },
+  "uart-fifo-control": {
+    "name": "UART_FIFO_CONFIG_0",
+    "base": "0x30002000",
+    "offset": "0x80",
+    "width": 32,
+    "reset": "0x00000000",
+    "summary": "FIFO reset, DMA and error status.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/uart_reg.h#L926",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 uart_reg.h",
+    "fields": [
+      {
+        "name": "uart_dma_tx_en",
+        "lsb": 0,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "TX DMA request enable."
+      },
+      {
+        "name": "uart_dma_rx_en",
+        "lsb": 1,
+        "width": 1,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "RX DMA request enable."
+      },
+      {
+        "name": "tx_fifo_clr",
+        "lsb": 2,
+        "width": 1,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "Write one to clear the TX FIFO."
+      },
+      {
+        "name": "rx_fifo_clr",
+        "lsb": 3,
+        "width": 1,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "Write one to clear the RX FIFO."
+      },
+      {
+        "name": "tx_fifo_overflow",
+        "lsb": 4,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "Tx fifo overflow."
+      },
+      {
+        "name": "tx_fifo_underflow",
+        "lsb": 5,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "Tx fifo underflow."
+      },
+      {
+        "name": "rx_fifo_overflow",
+        "lsb": 6,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "Rx fifo overflow."
+      },
+      {
+        "name": "rx_fifo_underflow",
+        "lsb": 7,
+        "width": 1,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "Rx fifo underflow."
+      }
+    ]
+  },
+  "uart-fifo-count": {
+    "name": "UART_FIFO_CONFIG_1",
+    "base": "0x30002000",
+    "offset": "0x84",
+    "width": 32,
+    "reset": "0x00000020",
+    "summary": "FIFO counts and interrupt thresholds.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/uart_reg.h#L942",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 uart_reg.h",
+    "fields": [
+      {
+        "name": "tx_fifo_cnt",
+        "lsb": 0,
+        "width": 6,
+        "access": "RO",
+        "reset": "0x20",
+        "description": "Number of available TX FIFO slots, not the number of bytes queued."
+      },
+      {
+        "name": "rx_fifo_cnt",
+        "lsb": 8,
+        "width": 6,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "Number of bytes available in the RX FIFO."
+      },
+      {
+        "name": "tx_fifo_th",
+        "lsb": 16,
+        "width": 5,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "TX FIFO interrupt threshold."
+      },
+      {
+        "name": "rx_fifo_th",
+        "lsb": 24,
+        "width": 5,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "RX FIFO interrupt threshold."
+      }
+    ]
+  },
+  "uart-write": {
+    "name": "UART_FIFO_WDATA",
+    "base": "0x30002000",
+    "offset": "0x88",
+    "width": 32,
+    "reset": null,
+    "summary": "TX FIFO data port.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/uart_reg.h#L957",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 uart_reg.h",
+    "fields": [
+      {
+        "name": "uart_fifo_wdata",
+        "lsb": 0,
+        "width": 8,
+        "access": "WO",
+        "reset": null,
+        "description": "Write a byte to enqueue it for transmission."
+      }
+    ]
+  },
+  "uart-read": {
+    "name": "UART_FIFO_RDATA",
+    "base": "0x30002000",
+    "offset": "0x8c",
+    "width": 32,
+    "reset": "0x00000000",
+    "summary": "RX FIFO data port.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/uart_reg.h#L966",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 uart_reg.h",
+    "fields": [
+      {
+        "name": "uart_fifo_rdata",
+        "lsb": 0,
+        "width": 8,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "Read a byte to dequeue it from the RX FIFO. Reading consumes data."
+      }
+    ]
+  },
+  "m0ic-status0": {
+    "name": "CORE_CFG16",
+    "base": "0x20000000",
+    "offset": "0x50",
+    "width": 32,
+    "reset": "0x00000000",
+    "summary": "Forwarding interrupt status bitmap.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/glb_reg.h#L9406",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 glb_reg.h",
+    "fields": [
+      {
+        "name": "np_int_sta0",
+        "lsb": 0,
+        "width": 32,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "Np int sta0."
+      }
+    ]
+  },
+  "m0ic-status1": {
+    "name": "CORE_CFG17",
+    "base": "0x20000000",
+    "offset": "0x54",
+    "width": 32,
+    "reset": "0x00000000",
+    "summary": "Forwarding interrupt status bitmap.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/glb_reg.h#L9414",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 glb_reg.h",
+    "fields": [
+      {
+        "name": "np_int_sta1",
+        "lsb": 0,
+        "width": 32,
+        "access": "RO",
+        "reset": "0x0",
+        "description": "Np int sta1."
+      }
+    ]
+  },
+  "m0ic-mask0": {
+    "name": "CORE_CFG18",
+    "base": "0x20000000",
+    "offset": "0x58",
+    "width": 32,
+    "reset": "0x00000000",
+    "summary": "Forwarding interrupt mask bitmap; one masks the source.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/glb_reg.h#L9422",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 glb_reg.h",
+    "fields": [
+      {
+        "name": "np_int_mask0",
+        "lsb": 0,
+        "width": 32,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "Np int mask0."
+      }
+    ]
+  },
+  "m0ic-mask1": {
+    "name": "CORE_CFG19",
+    "base": "0x20000000",
+    "offset": "0x5c",
+    "width": 32,
+    "reset": "0x00000000",
+    "summary": "Forwarding interrupt mask bitmap; one masks the source.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/glb_reg.h#L9430",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 glb_reg.h",
+    "fields": [
+      {
+        "name": "np_int_mask1",
+        "lsb": 0,
+        "width": 32,
+        "access": "RW",
+        "reset": "0x0",
+        "description": "Np int mask1."
+      }
+    ]
+  },
+  "m0ic-clear0": {
+    "name": "CORE_CFG20",
+    "base": "0x20000000",
+    "offset": "0x60",
+    "width": 32,
+    "reset": "0x00000000",
+    "summary": "Write-one-to-clear forwarding status bitmap.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/glb_reg.h#L9438",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 glb_reg.h",
+    "fields": [
+      {
+        "name": "np_int_clr0",
+        "lsb": 0,
+        "width": 32,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "Np int clr0."
+      }
+    ]
+  },
+  "m0ic-clear1": {
+    "name": "CORE_CFG21",
+    "base": "0x20000000",
+    "offset": "0x64",
+    "width": 32,
+    "reset": "0x00000000",
+    "summary": "Write-one-to-clear forwarding status bitmap.",
+    "source": "https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/glb_reg.h#L9446",
+    "sourceLabel": "Bouffalo Lab SDK \u00b7 glb_reg.h",
+    "fields": [
+      {
+        "name": "np_int_clr1",
+        "lsb": 0,
+        "width": 32,
+        "access": "W1C",
+        "reset": "0x0",
+        "description": "Np int clr1."
+      }
+    ]
+  },
+  "plic-priority": {
+    "name": "PRIORITY[81]",
+    "base": "0xe0000000",
+    "offset": "0x144",
+    "width": 32,
+    "reset": null,
+    "summary": "Source 81 priority. Zero disables notification for this source.",
+    "source": "https://github.com/riscv/riscv-plic-spec/blob/master/riscv-plic.adoc",
+    "sourceLabel": "RISC-V PLIC specification \u00b7 register layout and operation",
+    "fields": [
+      {
+        "name": "value",
+        "lsb": 0,
+        "width": 32,
+        "access": "RW",
+        "reset": null,
+        "description": "Source 81 priority. Zero disables notification for this source."
+      }
+    ]
+  },
+  "plic-pending": {
+    "name": "PENDING[2]",
+    "base": "0xe0000000",
+    "offset": "0x1008",
+    "width": 32,
+    "reset": null,
+    "summary": "Pending bits for source IDs 64 through 95. Source 81 is bit 17.",
+    "source": "https://github.com/riscv/riscv-plic-spec/blob/master/riscv-plic.adoc",
+    "sourceLabel": "RISC-V PLIC specification \u00b7 register layout and operation",
+    "fields": [
+      {
+        "name": "sources_64_95",
+        "lsb": 0,
+        "width": 32,
+        "access": "RO",
+        "reset": null,
+        "description": "Pending bits for source IDs 64 through 95. Source 81 is bit 17."
+      }
+    ]
+  },
+  "plic-enable": {
+    "name": "ENABLE[1][2]",
+    "base": "0xe0000000",
+    "offset": "0x2088",
+    "width": 32,
+    "reset": null,
+    "summary": "Context 1 enable bitmap for source IDs 64 through 95. Source 81 is bit 17.",
+    "source": "https://github.com/riscv/riscv-plic-spec/blob/master/riscv-plic.adoc",
+    "sourceLabel": "RISC-V PLIC specification \u00b7 register layout and operation",
+    "fields": [
+      {
+        "name": "sources_64_95",
+        "lsb": 0,
+        "width": 32,
+        "access": "RW",
+        "reset": null,
+        "description": "Context 1 enable bitmap for source IDs 64 through 95. Source 81 is bit 17."
+      }
+    ]
+  },
+  "plic-threshold": {
+    "name": "THRESHOLD[1]",
+    "base": "0xe0000000",
+    "offset": "0x201000",
+    "width": 32,
+    "reset": null,
+    "summary": "Context 1 interrupt priority threshold. A source must have a strictly greater priority to notify.",
+    "source": "https://github.com/riscv/riscv-plic-spec/blob/master/riscv-plic.adoc",
+    "sourceLabel": "RISC-V PLIC specification \u00b7 register layout and operation",
+    "fields": [
+      {
+        "name": "value",
+        "lsb": 0,
+        "width": 32,
+        "access": "RW",
+        "reset": null,
+        "description": "Context 1 interrupt priority threshold. A source must have a strictly greater priority to notify."
+      }
+    ]
+  },
+  "plic-claim": {
+    "name": "CLAIM_COMPLETE[1]",
+    "base": "0xe0000000",
+    "offset": "0x201004",
+    "width": 32,
+    "reset": null,
+    "summary": "Read to claim the highest-priority pending enabled source; write its ID to complete it. Reading has side effects.",
+    "source": "https://github.com/riscv/riscv-plic-spec/blob/master/riscv-plic.adoc",
+    "sourceLabel": "RISC-V PLIC specification \u00b7 register layout and operation",
+    "fields": [
+      {
+        "name": "value",
+        "lsb": 0,
+        "width": 32,
+        "access": "RW",
+        "reset": null,
+        "description": "Read to claim the highest-priority pending enabled source; write its ID to complete it. Reading has side effects."
+      }
+    ]
+  }
+}

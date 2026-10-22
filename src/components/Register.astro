@@ -1,0 +1,75 @@
+---
+import registers from '../data/registers.json';
+interface Props { id: keyof typeof registers; }
+const { id } = Astro.props;
+const register = registers[id];
+if (!register) throw new Error(`Unknown register: ${id}`);
+const address = `0x${(BigInt(register.base) + BigInt(register.offset)).toString(16).padStart(8, '0')}`;
+const fields = [...register.fields].sort((a, b) => b.lsb - a.lsb);
+const hasReset = fields.some(field => field.reset !== null);
+---
+<section class="register" id={id} aria-labelledby={`${id}-title`}>
+  <div class="register-title">
+    <h3 id={`${id}-title`}><a href={`#${id}`}>{register.name}</a></h3>
+    <span class="register-address">{address}</span>
+  </div>
+  <p>{register.summary}</p>
+  <dl class="register-meta">
+    <div><dt>Base</dt><dd><code>{register.base}</code></dd></div>
+    <div><dt>Offset</dt><dd><code>+{register.offset}</code></dd></div>
+    <div><dt>Width</dt><dd>{register.width} bits</dd></div>
+    {register.reset && <div><dt>SDK reset</dt><dd><code>{register.reset}</code></dd></div>}
+  </dl>
+  <div class="bit-scroll" tabindex="0" role="region" aria-label={`${register.name} bit layout`}>
+    <div class="bit-ruler" aria-hidden="true">{Array.from({ length: 32 }, (_, i) => <span>{31 - i}</span>)}</div>
+    <div class="bit-layout">
+      {fields.map(field => <a href={`#${id}-field-${field.lsb}`} class:list={['bit-field', field.width === 1 && 'single-bit']} style={`grid-column:${33 - field.lsb - field.width} / span ${field.width}`} title={`${field.name} · ${field.lsb + field.width - 1}:${field.lsb}`}><span>{field.width < 4 ? field.lsb : field.name.replace(/^(cr_|reg_|c906_)/, '')}</span></a>)}
+    </div>
+  </div>
+  <div class="table-scroll" tabindex="0" role="region" aria-label={`${register.name} field definitions`}>
+    <table class="field-table">
+      <thead><tr><th>Bits</th><th>Field</th><th>Access</th>{hasReset && <th>SDK reset</th>}<th>Description</th><th class="decoded-column" hidden>Decoded</th></tr></thead>
+      <tbody>{fields.map(field => <tr id={`${id}-field-${field.lsb}`} data-lsb={field.lsb} data-width={field.width}>
+        <td class="bits"><code>{field.width === 1 ? field.lsb : `${field.lsb + field.width - 1}:${field.lsb}`}</code></td>
+        <td><code>{field.name}</code></td><td><span class="access">{field.access}</span></td>
+        {hasReset && <td><code>{field.reset ?? '—'}</code></td>}
+        <td>{field.description}</td><td class="decoded-column" hidden><output></output></td>
+      </tr>)}</tbody>
+    </table>
+  </div>
+  <details class="register-decoder">
+    <summary>Decode a register value</summary>
+    <label for={`${id}-value`}>32-bit value <input id={`${id}-value`} type="text" placeholder="0x00000000" autocomplete="off" spellcheck="false" /></label>
+    <p class="decode-status" role="status" aria-live="polite">Enter hexadecimal or decimal to extract the documented fields.</p>
+  </details>
+  <p class="register-source">Field definitions: <a href={register.source}>{register.sourceLabel}</a>. <a href="/references/notation/#register-entries">Notation</a></p>
+</section>
+<script>
+  for (const register of document.querySelectorAll<HTMLElement>('.register')) {
+    const input = register.querySelector<HTMLInputElement>('input');
+    const status = register.querySelector<HTMLElement>('.decode-status');
+    if (!input || !status) continue;
+    input.addEventListener('input', () => {
+      const raw = input.value.trim();
+      let value: bigint;
+      try {
+        if (!/^(0x[\da-f]+|\d+)$/i.test(raw)) throw new Error();
+        value = BigInt(raw);
+        if (value < 0n || value > 0xffffffffn) throw new Error();
+      } catch {
+        register.querySelectorAll<HTMLElement>('.decoded-column').forEach(cell => cell.hidden = true);
+        status.textContent = raw ? 'Enter a value from 0 to 0xffffffff.' : 'Enter hexadecimal or decimal to extract the documented fields.';
+        input.setAttribute('aria-invalid', String(Boolean(raw)));
+        return;
+      }
+      input.setAttribute('aria-invalid', 'false');
+      register.querySelectorAll<HTMLElement>('.decoded-column').forEach(cell => cell.hidden = false);
+      for (const row of register.querySelectorAll<HTMLTableRowElement>('tr[data-lsb]')) {
+        const lsb = BigInt(row.dataset.lsb!);
+        const mask = (1n << BigInt(row.dataset.width!)) - 1n;
+        row.querySelector('output')!.textContent = `0x${((value >> lsb) & mask).toString(16)}`;
+      }
+      status.textContent = `Decoded 0x${value.toString(16).padStart(8, '0')}. This tool does not read or write hardware.`;
+    });
+  }
+</script>

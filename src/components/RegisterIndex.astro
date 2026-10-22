@@ -1,0 +1,10 @@
+---
+import registers from '../data/registers.json';
+interface Props { ids: (keyof typeof registers)[]; }
+const { ids } = Astro.props;
+---
+<div class="table-scroll" tabindex="0" role="region" aria-label="Register summary">
+  <table class="register-index"><thead><tr><th>Offset</th><th>Register</th><th>Description</th></tr></thead><tbody>
+    {ids.map(id => <tr><td><code>{registers[id].offset}</code></td><td><a href={`#${id}`}><code>{registers[id].name}</code></a></td><td>{registers[id].summary}</td></tr>)}
+  </tbody></table>
+</div>

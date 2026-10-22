@@ -1,0 +1,37 @@
+---
+title: "GLB clock controls"
+description: "MCU bus dividers, SDH module clock selection and bus gating."
+---
+
+import Register from '../../../components/Register.astro';
+import RegisterIndex from '../../../components/RegisterIndex.astro';
+
+GLB is the MCU-side global control block at `0x20000000`. This page covers the MCU clock-divider fields and SDH clock controls used by the documented board path.
+
+## MCU clocks
+
+The MCU root comes from the [HBN / PDS selectors](/clocks/hbn-pds/). `SYS_CFG0` holds the MCU core/high-speed divider and peripheral-bus divider. The SDK clock model computes the bus rate from the core path through the bus divisor.
+
+Changing the divider value is not the complete transition protocol. The SDK's bus-divider update sequence also requests application of the setting. See [initialization and reset](/clocks/sequencing/).
+
+## SDH has two gates
+
+The SDH module clock is selected and divided in `SDH_CFG0`. Its bus-interface clock is enabled separately in `CGEN_CFG2`. The host controller then uses its own clock-control register at `0x2006002c` to enable and divide the card clock.
+
+```text
+PLL branch → SDH_CFG0 selector/divider/module gate → SDH internal clock
+GLB bus    → CGEN_CFG2 SDH bus gate               → register interface
+SDH internal clock → host clock divider/output enable → card CLK pad
+```
+
+The parent selector encodings below come from the SDK. The SDH interrupt path is described under [MCU interrupt forwarding](/interrupts/m0ic/#sdh-delivery-path).
+
+## Registers
+
+<RegisterIndex ids={["glb-system", "glb-sdh", "glb-gates"]} />
+
+<Register id="glb-system" />
+
+<Register id="glb-sdh" />
+
+<Register id="glb-gates" />

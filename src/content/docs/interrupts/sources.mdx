@@ -1,0 +1,25 @@
+---
+title: "Interrupt source map"
+description: "Vendor-assigned D0 interrupt source identifiers and controller numbering."
+---
+
+import Register from '../../../components/Register.astro';
+import RegisterIndex from '../../../components/RegisterIndex.astro';
+
+import SourceMap from '../../../components/SourceMap.astro';
+
+## D0 assignments
+
+The SDK's D0 interrupt enumeration uses `IRQ_NUM_BASE = 16`. The table expands those expressions into numeric IDs while preserving the SDK names. Reserved names remain reserved entries. These assignments are distinct from Linux's dynamically mapped virtual IRQ numbers.
+
+<SourceMap />
+
+## Forwarded sources
+
+SDH's MCU forwarding index is **17**, while the D0 PLIC route observed in the board diagnostic is **81** (`WL_ALL`). Adding the SDK base to a child index is not a general conversion between controller domains.
+
+See the [numbering-domain table](/interrupts/overview/#numbering-domains) and [SDH forwarding path](/interrupts/m0ic/#sdh-delivery-path) before using an ID in a driver or device tree.
+
+## Source definition
+
+The assignments come from the `CPU_D0` section of vendor [bl808.h](https://github.com/bouffalolab/bl808_linux/blob/main/bl_mcu_sdk_bl808/drivers/bl808_driver/regs/bl808.h). UART3's assignment is also listed in the vendor reference manual's Interrupt Source chapter. The table is a source-ID reference, not a statement that an operating system driver exists for every listed block.

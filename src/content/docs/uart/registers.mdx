@@ -1,0 +1,37 @@
+---
+title: "UART registers"
+description: "UART3 control, interrupt, baud and FIFO register reference."
+---
+
+import Register from '../../../components/Register.astro';
+import RegisterIndex from '../../../components/RegisterIndex.astro';
+
+The instance base used here is **UART3: `0x30002000`**. Entries show the console-related TX/RX fields, baud controls, interrupt registers and FIFO interface. Other registers and omitted fields are outside these entries' coverage.
+
+SDK reset values describe the cited register definition. Runtime console values are discussed in the [functional description](/uart/overview/) and are not substituted for reset values.
+
+## Register summary and fields
+
+<RegisterIndex ids={["uart-tx", "uart-rx", "uart-period", "uart-status", "uart-mask", "uart-clear", "uart-enable", "uart-fifo-control", "uart-fifo-count", "uart-write", "uart-read"]} />
+
+<Register id="uart-tx" />
+
+<Register id="uart-rx" />
+
+<Register id="uart-period" />
+
+<Register id="uart-status" />
+
+<Register id="uart-mask" />
+
+<Register id="uart-clear" />
+
+<Register id="uart-enable" />
+
+<Register id="uart-fifo-control" />
+
+<Register id="uart-fifo-count" />
+
+<Register id="uart-write" />
+
+<Register id="uart-read" />

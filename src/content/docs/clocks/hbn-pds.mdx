@@ -1,0 +1,41 @@
+---
+title: "HBN & PDS"
+description: "Always-on root-clock and MCU PLL-path selectors."
+---
+
+import Register from '../../../components/Register.astro';
+import RegisterIndex from '../../../components/RegisterIndex.astro';
+
+HBN and PDS supply parent choices used by the MCU clock tree. Their root-clock controls are separate from the multimedia domain's `MM_XCLK` and D0 root selector.
+
+## MCU root path
+
+The low two bits of HBN_GLB form two selectors. Bit 0 chooses the XCLK oscillator source. Bit 1 chooses whether the MCU root uses XCLK or the PLL path selected through PDS.
+
+```text
+RC32M ─┐
+       ├─ HBN_GLB[0] → XCLK ─┐
+XTAL ──┘                     ├─ HBN_GLB[1] → MCU root → GLB dividers
+PDS PLL parent ──────────────┘
+```
+
+PDS `CPU_CORE_CFG1` selects the PLL branch and controls the associated MCU clock gate. The names in the selector table identify SDK branches; no measured absolute PLL rate is implied.
+
+## MCU UART path
+
+The MCU UART parent uses HBN UART selectors and the GLB UART divider/gate. **UART3 uses the MM_GLB path instead.** Configuring the MCU UART parent does not configure the D0 console's clock.
+
+| Selector | 0 | 1 |
+| --- | --- | --- |
+| `HBN_GLB[0]` | RC32M | XTAL |
+| `HBN_GLB[1]` | XCLK | PDS PLL path |
+| `HBN_GLB[2]` | BCLK | MCU mux-PLL branch |
+| `HBN_GLB[15]` | UART parent from bit 2 | XCLK |
+
+## Registers
+
+<RegisterIndex ids={["hbn-glb", "pds-cpu"]} />
+
+<Register id="hbn-glb" />
+
+<Register id="pds-cpu" />

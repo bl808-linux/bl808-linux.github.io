@@ -1,0 +1,22 @@
+---
+import interrupts from '../data/interrupts.json';
+---
+<div class="source-map">
+  <label for="irq-filter">Find an interrupt <input id="irq-filter" type="search" placeholder="UART3, DMA2, 81…" autocomplete="off" /></label>
+  <p class="filter-count" role="status" aria-live="polite">{interrupts.length} source IDs</p>
+  <div class="table-scroll" tabindex="0" role="region" aria-label="D0 interrupt source map">
+    <table><thead><tr><th>D0 source ID</th><th>SDK name</th></tr></thead><tbody>{interrupts.map(irq => <tr data-search={`${irq.id} ${irq.name}`.toLowerCase()}><td><code>{irq.id}</code></td><td><code>{irq.name}</code></td></tr>)}</tbody></table>
+  </div>
+</div>
+<script>
+  const input = document.querySelector<HTMLInputElement>('#irq-filter');
+  input?.addEventListener('input', () => {
+    let count = 0;
+    for (const row of document.querySelectorAll<HTMLTableRowElement>('.source-map tr[data-search]')) {
+      const shown = row.dataset.search!.includes(input.value.trim().toLowerCase());
+      row.hidden = !shown;
+      if (shown) count++;
+    }
+    document.querySelector('.filter-count')!.textContent = `${count} source IDs`;
+  });
+</script>

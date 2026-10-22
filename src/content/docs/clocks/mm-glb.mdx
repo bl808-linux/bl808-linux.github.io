@@ -1,0 +1,42 @@
+---
+title: "MM_GLB clock controls"
+description: "D0 root selection, multimedia dividers and UART3 source clock."
+---
+
+import Register from '../../../components/Register.astro';
+import RegisterIndex from '../../../components/RegisterIndex.astro';
+
+MM_GLB begins at `0x30007000`. It controls the C906 root path, multimedia buses and the MM UART source. UART3 is called **MM UART0** in these register field names.
+
+## D0 root selection
+
+| Field | Encoding | Selected path |
+| --- | --- | --- |
+| `MM_CLK_CTRL_CPU[10]` | 0 / 1 | RC32M / XTAL for MM_XCLK |
+| `MM_CLK_CTRL_CPU[11]` | 0 / 1 | MM_XCLK / PLL path for the D0 root |
+| `MM_CLK_CTRL_CPU[9:8]` | 0 | MM_MUXPLL_240M branch |
+| | 1 | MM_MUXPLL_320M branch |
+| | 2 or 3 | CPUPLL_400M branch |
+| `MM_CLK_CTRL_CPU[12]` | 1 | D0 core clock enabled |
+
+The PLL-path selector chooses a branch. Some branch parents have another selector in GLB, as described by SDK `Clock_DSP_Get_Muxpll_*_Sel_Val`. The branch's name alone does not establish its actual rate.
+
+## Multimedia buses
+
+`MM_CLK_CPU[7:0]` divides the D0 root. `MM_CLK_CPU[23:16]` controls MM_BCLK2X, and bits `[31:24]` control the independently selected MM_BCLK1X path. The SDK switches to XCLK while updating D0/BCLK2X dividers, requests the divider change, waits for completion and restores the parent selection.
+
+## UART3 source
+
+The MM UART selector is `MM_CLK_CTRL_CPU[5:4]`: 0 selects MM_BCLK1X, 1 selects MM_MUXPLL_160M, and 2 selects MM_XCLK. `MM_CLK_CTRL_PERI[19:17]` is its source divider; bit 16 enables that divider path.
+
+The console setup chooses XTAL for MM_XCLK, selects MM_XCLK for UART, and uses divider encoding zero. UART3's own [bit-period register](/uart/registers/#uart-period) then sets the serial baud rate.
+
+## Registers
+
+<RegisterIndex ids={["mm-control", "mm-dividers", "mm-peripheral"]} />
+
+<Register id="mm-control" />
+
+<Register id="mm-dividers" />
+
+<Register id="mm-peripheral" />

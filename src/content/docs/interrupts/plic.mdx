@@ -1,0 +1,57 @@
+---
+title: "PLIC"
+description: "D0 PLIC priorities, context windows and claim/complete semantics."
+---
+
+import Register from '../../../components/Register.astro';
+import RegisterIndex from '../../../components/RegisterIndex.astro';
+
+The D0 PLIC occupies an aperture starting at `0xe0000000`. Each source has a priority. Each hart context has an enable bitmap, a priority threshold and a claim/complete register.
+
+## Contexts and delegation
+
+The boot device tree lists machine external cause 11 followed by supervisor external cause 9 for hart 0. OpenSBI maps those entries to context 0 and context 1 respectively. In the tested S-mode peripheral route, context 1 uses the claim/complete register at `0xe0201004`.
+
+For `thead,c900-plic`, OpenSBI also enables supervisor access using bit 0 of the T-HEAD control register at `0xe01ffffc`. This PLIC-specific delegation is separate from CPU interrupt delegation and from PMP permissions.
+
+## Register addressing
+
+Let `B = 0xe0000000`, `s` be a source ID and `c` a context index. The source-0 identifier is reserved.
+
+| Register | Address |
+| --- | --- |
+| Source priority | `B + 4 × s` |
+| Pending word | `B + 0x1000 + 4 × floor(s / 32)` |
+| Context enable word | `B + 0x2000 + 0x80 × c + 4 × floor(s / 32)` |
+| Context threshold | `B + 0x200000 + 0x1000 × c` |
+| Context claim/complete | `B + 0x200004 + 0x1000 × c` |
+
+For a bitmap word, the source's bit is `s % 32`. Source 81 therefore uses word 2, bit 17. The [SDH forwarding path](/interrupts/m0ic/#sdh-delivery-path) exercised this source and the supervisor context.
+
+## Claim and complete
+
+A read of the claim register returns an enabled pending source ID and atomically claims it. Zero means no source was claimed. A write of the handled ID to the same register completes that claim.
+
+Reading claim/complete is an operation with side effects, not passive inspection. Raising a threshold suppresses notifications; it does not make a claim read a harmless status query. A source must have a priority strictly greater than the threshold to notify the target context.
+
+The peripheral and any intermediate latch must be handled before completing a level request that would otherwise remain asserted. The actual trigger type and handler policy belong to the source and controller binding.
+
+## Concrete source-81 / context-1 registers
+
+<RegisterIndex ids={["plic-priority", "plic-pending", "plic-enable", "plic-threshold", "plic-claim"]} />
+
+<Register id="plic-priority" />
+
+<Register id="plic-pending" />
+
+<Register id="plic-enable" />
+
+<Register id="plic-threshold" />
+
+<Register id="plic-claim" />
+
+## Device-tree interface
+
+The Linux binding for `thead,c900-plic` requires two interrupt cells: source ID and trigger flags. The PLIC's `interrupts-extended` entries identify the CPU-local context connections; they are not peripheral source declarations.
+
+A source count of 82 describes IDs 1 through 82. A driver message reporting 83 mapped entries includes the reserved ID-0 slot; it does not establish a peripheral source 83.
