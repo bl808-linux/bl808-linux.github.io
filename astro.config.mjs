@@ -18,6 +18,11 @@ export default defineConfig({
         { label: 'Memory map', slug: 'address-space/memory-map' },
         { label: 'Core views & aliases', slug: 'address-space/core-views' },
       ] },
+      { label: 'Boot & storage', items: [
+        { label: 'Storage roles & boot', slug: 'storage/overview' },
+        { label: 'SPI NOR layout & updates', slug: 'storage/flash' },
+        { label: 'SD card & Linux files', slug: 'storage/sd-card' },
+      ] },
       { label: 'Clocks & reset', items: [
         { label: 'Clock tree', slug: 'clocks/overview' },
         { label: 'GLB', slug: 'clocks/glb' },

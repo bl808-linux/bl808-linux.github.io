@@ -10,9 +10,11 @@ An address must be read together with its core view and mapping. Register blocks
 | Base | End, exclusive | Size | Block | Interface |
 | --- | --- | --- | --- | --- |
 | `0x20000000` | `0x20001000` | 4 KiB | GLB | MCU clock, peripheral and interrupt-forwarding controls |
+| `0x2000b000` | `0x2000c000` | 4 KiB | SF controller | SPI NOR command and XIP control |
 | `0x2000e000` | `0x2000f000` | 4 KiB | PDS | MCU clock-parent and power/reset controls |
 | `0x2000f000` | `0x20010000` | 4 KiB | HBN | Always-on root-clock selection |
 | `0x20060000` | `0x20061000` | 4 KiB | SDH | SD host controller |
+| `0x20072000` | `0x20073000` | 4 KiB | USB | Native OTG controller used by M0 DFU |
 | `0x30000000` | `0x30001000` | 4 KiB | MM_MISC | C906 boot, time-clock and shared-memory controls |
 | `0x30002000` | `0x30003000` | 4 KiB | UART3 | Multimedia UART0 instance |
 | `0x30007000` | `0x30008000` | 4 KiB | MM_GLB | Multimedia clock and reset controls |
@@ -44,6 +46,7 @@ The address-space aperture and the fitted device capacity are different quantiti
 
 ## Cross-reference
 
+- [NOR boot-firmware offsets](/storage/flash/) and [SD operating-system files](/storage/sd-card/).
 - [GLB clock controls](/clocks/glb/) and [MM_GLB](/clocks/mm-glb/).
 - [PLIC register addressing](/interrupts/plic/#register-addressing).
 - [C906 time-counter clock](/clocks/rtc/).

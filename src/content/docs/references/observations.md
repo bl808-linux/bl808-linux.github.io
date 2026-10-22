@@ -72,6 +72,29 @@ receiver's requirement for an advancing counter. The
 [UART description](/uart/overview/#normal-boot-file-reception) records the
 transfer interface and result.
 
+## M0 USB firmware update and software reboot
+
+On 2026-10-22, the M1s Dock ran a Rust M0 service from MCU SRAM and
+OpenSBI/U-Boot on D0. The service used the native OTG port, USB DFU identity
+`1209:0001`, product `BL808 M0 DFU`, and 64-byte transfers into a 4 KiB buffer.
+
+The image-update run programmed and independently read back 123 NOR sectors:
+OpenSBI, U-Boot, the boot-firmware DTB, the D0 loader, and their U-Boot/Group1
+headers. D0 stayed stopped during controller access. The full Group0/M0
+SHA-256 was identical before and after the update.
+
+DFU_DETACH then caused a software POR without BOOT/RST button input. The
+board returned through OpenSBI `v1.9-73-g6ad246a1` and U-Boot
+`2026.10-g62c9805d8d57-dirty`. The M0 runtime occupied 12672 SRAM bytes;
+its post-reboot CRC32 matched `a1241e4b`. USB re-enumerated and reported D0
+running with zero DMA errors. Standalone DETACH and a later post-check reboot
+also returned to that normal boot path.
+
+These observations establish the recorded Flash write/readback and warm
+software-reboot sequence. The [NOR chapter](/storage/flash/) gives the physical
+offsets and the [SD chapter](/storage/sd-card/#recorded-file-reads) records the
+separate card-read sessions.
+
 ## Interpreting the results
 
 The [RTC observation](/clocks/rtc/#observed-enable-behavior) establishes that

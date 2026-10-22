@@ -13,13 +13,14 @@ This reference describes the BL808 interfaces used to bring up firmware and oper
 <a href="/interrupts/overview/"><small>02 / INTERRUPT DELIVERY</small><strong>Interrupts →</strong><span>Follow local timer events and peripheral requests through their different delivery paths.</span></a>
 <a href="/address-space/memory-map/"><small>03 / ADDRESS SPACE</small><strong>Memory map →</strong><span>Locate register blocks, SRAM, PSRAM and XIP. Distinguish addresses from storage offsets.</span></a>
 <a href="/uart/overview/"><small>04 / PERIPHERAL INTERFACE</small><strong>UART →</strong><span>Connect the source clock and pads to the FIFO, baud generator and interrupt controls.</span></a>
+<a href="/storage/overview/"><small>05 / BOOT &amp; STORAGE</small><strong>Flash &amp; SD →</strong><span>Keep OpenSBI and U-Boot in NOR, Linux on SD, and execution buffers in RAM.</span></a>
 </div>
 
 ## The system at a glance
 
 | Block | Interface | Role |
 | --- | --- | --- |
-| M0 / E907 | RV32 | MCU execution domain; the minimal loader releases D0 |
+| M0 / E907 | RV32 | MCU execution domain; releases D0 and services USB firmware updates from SRAM |
 | D0 / C906 | RV64 | Application execution domain; M-mode firmware and S-mode operating system |
 | LP / E902 | Low-power core | Separate low-power execution domain |
 | GLB, HBN, PDS | MCU-side control registers | Clock selection, gating, reset and forwarding controls |

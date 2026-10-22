@@ -65,3 +65,5 @@ current addresses for the image being used; see the
 | Allocate and map OS memory | Linux from the supplied device tree |
 
 The [address map](/address-space/memory-map/) describes the memory windows.
+The [storage layout](/storage/overview/) separates NOR boot firmware from Linux
+on SD and from the RAM used to execute those images.

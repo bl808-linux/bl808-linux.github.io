@@ -1,0 +1,95 @@
+---
+title: "SPI NOR layout & updates"
+description: "M1s Dock boot-firmware offsets, erase units and the SRAM-resident M0 update path."
+---
+
+The tested M1s Dock has a 16 MiB W25Q128 SPI NOR with JEDEC ID `ef4018`.
+The locations below are **physical Flash offsets**, with exclusive ends.
+They are the loader's board-specific storage contract, not CPU addresses.
+
+Linux belongs to the [SD operating-system layout](/storage/sd-card/). The NOR
+boot chain contains OpenSBI and U-Boot, together with the M0/D0 startup firmware,
+their metadata and the boot-firmware DTB.
+
+## Boot-firmware placement
+
+| Start | End, exclusive | Capacity | Contents |
+| --- | --- | --- | --- |
+| `0x000000` | `0x001000` | 4 KiB | Group0 boot metadata and Flash configuration table |
+| `0x001000` | `0x002000` | 4 KiB | Group1 boot metadata |
+| `0x002000` | `0x052000` | 320 KiB | M0 firmware body |
+| `0x052000` | `0x0a2000` | 320 KiB | D0 loader body |
+| `0x0d2000` | `0x0e2000` | 64 KiB | Boot-firmware DTB |
+| `0x0f1ff8` | `0x0f2000` | 8 bytes | U-Boot load address and body length |
+| `0x0f2000` | `0x552000` | `0x460000` bytes | Uncompressed U-Boot body |
+| `0x852000` | `0x8d2000` | 512 KiB | OpenSBI image and declared zero padding |
+
+Capacity is a slot limit, not an assertion that every byte contains image data.
+The table does not allocate the gaps between these components. In particular,
+a gap is not a second firmware bank or an automatic recovery partition.
+
+The Group0 and Group1 headers select different physical bodies even though
+both firmware entry addresses are `0x58000000`. Under the D0 mapping, the
+boot DTB, U-Boot and OpenSBI are visible at `0x58080000`, `0x580a0000` and
+`0x58800000` respectively. See [core views and aliases](/address-space/core-views/#the-same-xip-entry-can-map-different-images).
+
+## Headers are part of an update
+
+| Component | Metadata that must agree with its body |
+| --- | --- |
+| M0 / D0 firmware | CPU-group header: body offset, padded length, SHA-256 and header CRC |
+| U-Boot | Eight-byte little-endian pair: load address `0x50000000`, then body length |
+| OpenSBI | Loader header: magic, format version, XLEN and declared runtime-copy size |
+| Boot DTB | FDT magic and total size within its 64 KiB slot |
+
+The D0 loader copies OpenSBI into the 512 KiB internal-SRAM reservation at
+`0x3ef80000`, U-Boot to `0x50000000`, and the boot DTB to `0x51ff8000`.
+These are load locations; U-Boot later relocates itself in PSRAM.
+
+## Erase units and controller ownership
+
+The recorded writer erases 4096-byte sectors and programs 256-byte pages.
+Before a sector erase, all 4096 replacement bytes must be available in SRAM.
+A file that ends partway through a sector must preserve the other bytes from
+that sector's original contents.
+
+The U-Boot length header demonstrates why this matters: its eight bytes share
+the erase unit `[0x0f1000, 0x0f2000)` with 4088 other bytes. Updating the header
+requires preserving those bytes, rather than erasing them as incidental padding.
+
+M0 stops D0 before taking the NOR controller's command interface. Its running
+code, constants, transfer buffer and trap entry reside in MCU SRAM, so the
+write operation does not fetch instructions from the NOR being modified.
+D0 remains stopped until the subsequent system reboot.
+
+The tested command path uses single-line SPI reads, sector erase and page
+program. It verifies the erased bytes, waits for each operation to finish,
+and compares the complete programmed sector through fresh controller reads.
+It does not rely on an XIP cache read to establish storage integrity.
+
+## USB update and return to normal boot
+
+Connect the board's native **OTG USB port** for the M0 service. The dock's
+USB-to-UART connection is a separate communication path. The recorded DFU
+service accepts updates during normal board operation; entering the chip's
+ROM Flash Mode is not part of this update sequence.
+
+The host transfers bounded sectors, verifies their readback and keeps bodies
+consistent with their headers. Ordinary updates preserve the M0/Group0 area.
+The M0 service then accepts DFU_DETACH as a normal software-reboot request:
+
+```sh
+dfu-util -d 1209:0001 -a 0 -e
+```
+
+The `1209:0001` identity is the recorded private test identity, with product
+string `BL808 M0 DFU`. The service waits for NOR readiness, clears write enable,
+acknowledges the request, returns the MCU/MM clock roots to RC32M and issues
+software POR. The Boot ROM reloads the firmware and the board returns through
+OpenSBI to U-Boot. A USB bus reset alone resets USB communication state.
+
+In the 2026-10-22 image-update run, 123 sectors covering OpenSBI, U-Boot, the
+boot DTB, D0 and the two associated headers passed program/readback verification.
+The complete M0/Group0 hash remained unchanged. The automatic reboot reached
+OpenSBI/U-Boot, matched the M0 SRAM-code CRC and re-enumerated USB. See the
+[recorded board context](/references/observations/#m0-usb-firmware-update-and-software-reboot).

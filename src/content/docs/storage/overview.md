@@ -1,0 +1,77 @@
+---
+title: "Boot & storage"
+description: "NOR for board firmware, SD for Linux, and RAM for execution on M1s Dock."
+---
+
+The M1s Dock operating-system layout separates **board firmware in SPI NOR**
+from **Linux on the SD card**. OpenSBI and U-Boot belong to the Flash boot chain;
+the kernel, its device tree, initramfs and root filesystem belong to the SD
+installation. M0 and the small D0 loader also remain in NOR to start that chain.
+
+## Three different jobs
+
+| Storage | Contents | Job |
+| --- | --- | --- |
+| 16 MiB SPI NOR | M0/D0 firmware, ROM boot metadata, OpenSBI, U-Boot and the boot-firmware DTB | Start the board and reach the operating-system loader |
+| SD card | Linux kernel, Linux DTB, optional initramfs, root filesystem and matching kernel modules | Hold the operating-system installation and kernel generations |
+| SRAM and 64 MiB PSRAM | Running firmware, loaded images, decompression buffers and OS memory | Execute code and hold working data |
+
+<figure class="diagram">
+<svg viewBox="0 0 760 300" role="img" aria-labelledby="storage-title storage-desc">
+<title id="storage-title">Firmware in NOR, Linux on SD, execution in RAM</title>
+<desc id="storage-desc">NOR contains startup firmware, OpenSBI and U-Boot. U-Boot reads Linux boot files from SD into PSRAM. OpenSBI runs in internal SRAM and Linux uses its root filesystem on SD.</desc>
+<defs><marker id="storage-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="currentColor"/></marker></defs>
+<rect class="accent-node" x="20" y="20" width="342" height="85" rx="5"/>
+<text x="38" y="47" font-size="17" font-weight="600">SPI NOR · board firmware</text>
+<text x="38" y="71" font-size="13">M0 / D0 loader · OpenSBI · U-Boot</text>
+<text x="38" y="91" class="note">Boot metadata and boot-firmware DTB</text>
+<rect class="accent-node" x="398" y="20" width="342" height="85" rx="5"/>
+<text x="416" y="47" font-size="17" font-weight="600">SD card · operating system</text>
+<text x="416" y="71" font-size="13">Linux · Linux DTB · optional initramfs</text>
+<text x="416" y="91" class="note">Root filesystem and kernel modules</text>
+<path class="line" d="M190 105 V183" marker-end="url(#storage-arrow)"/>
+<text x="205" y="150" class="note">Firmware copies</text>
+<path class="line" d="M568 105 V183" marker-end="url(#storage-arrow)"/>
+<text x="580" y="150" class="note">U-Boot loads</text>
+<rect class="node" x="20" y="190" width="342" height="83" rx="5"/>
+<text x="38" y="219" font-size="17" font-weight="600">Internal SRAM</text>
+<text x="38" y="244" font-size="13">M0 service · D0 loader data · OpenSBI</text>
+<rect class="node" x="398" y="190" width="342" height="83" rx="5"/>
+<text x="416" y="219" font-size="17" font-weight="600">External PSRAM</text>
+<text x="416" y="244" font-size="13">U-Boot · loaded kernel · Linux memory</text>
+</svg>
+<figcaption>Storage placement and execution memory are separate. Reading Linux from SD loads its boot images into RAM; the root filesystem remains on the card.</figcaption>
+</figure>
+
+## Boot handoff
+
+1. The chip's Boot ROM selects the NOR firmware through the CPU-group headers.
+2. M0 starts the multimedia domain and releases D0.
+3. The D0 loader initializes PSRAM, copies OpenSBI to internal SRAM, and copies
+   U-Boot and the boot-firmware DTB to PSRAM.
+4. OpenSBI establishes the M-mode runtime and enters U-Boot in S-mode.
+5. In the SD operating-system layout, U-Boot loads the Linux boot files from the
+   card into PSRAM and passes the Linux DTB to the kernel.
+
+OpenSBI continues providing machine-mode services after Linux starts. U-Boot's
+SD driver performs the boot-time reads; Linux uses its own driver for subsequent
+card and filesystem access.
+
+## Keep the two device trees distinct
+
+The **boot-firmware DTB** is part of the NOR bundle and configures the firmware
+handoff to OpenSBI and U-Boot. The **Linux DTB** is an SD boot file selected with
+its kernel. Both describe the board, but their storage and consumers differ.
+A kernel update does not by itself replace the NOR boot-firmware DTB.
+
+## Update boundaries
+
+A Linux update changes files on SD, together with the modules for that kernel.
+An OpenSBI or U-Boot update changes its NOR component and any associated loader
+metadata. M0's USB service provides the recorded firmware-update path while D0
+is stopped; it uses MCU SRAM rather than buffering a whole image in PSRAM.
+
+See the [physical NOR layout](/storage/flash/), [SD file roles](/storage/sd-card/)
+and [core address views](/address-space/core-views/). The board-specific
+[update and reboot observations](/references/observations/#m0-usb-firmware-update-and-software-reboot)
+record the tested Flash operations.
