@@ -54,6 +54,32 @@ UART3 is assigned D0 source ID 20 in the [source map](/interrupts/sources/). Per
 
 The working polling console uses eight data bits, one stop bit and no parity. It initializes the FIFOs, masks interrupts for polling operation, sets the bit periods and enables the TX/RX logic. Clock and pad routing are configured before this peripheral sequence.
 
+## Normal-boot file reception
+
+UART communication is available at the normal U-Boot prompt. Its `loads`
+command receives S-records over the console connection and places their data
+at the addresses encoded in those records. ROM download mode is a separate
+receiver and was not used for this operation.
+
+On 2026-10-22, the M1s Dock running U-Boot `2026.10-g62c9805d8d57-dirty`
+received a PC file over the 2 Mbps console connection:
+
+| Item | Observed result |
+| --- | --- |
+| Reception | `loads`, S3 data records with an S7 terminator |
+| Destination | PSRAM `[0x51220000, 0x51220400)` |
+| Reported size | `0x400`, 1,024 bytes |
+| PC file CRC32 | `b70b4c26` |
+| Board RAM CRC32 | `b70b4c26` |
+| End state | Completion summary and working U-Boot prompt |
+
+The [RTC counter was initialized first](/clocks/rtc/#u-boot-delay-dependency)
+because the receiver's completion delay requires timer progress. The original
+CPU_RTC control word was restored after verification, and `version` answered
+again. The received data remained in RAM; the run performed no NOR writes.
+This establishes the recorded 1 KiB transfer, without extending the result to
+image-sized transfers or other serial protocols.
+
 ## M1s Dock boot readback
 
 The paired 2026-10-21 power-on and board-RESET sessions read the following

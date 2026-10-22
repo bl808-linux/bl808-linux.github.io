@@ -16,6 +16,7 @@ applies to the boot configuration and operation recorded for that session.
 | 2026-10-21 | M1s Dock, SRAM OpenSBI and S-mode U-Boot | UART3 console output and paced command input worked at 2 Mbps |
 | 2026-10-21 | M1s Dock, firmware `2f31e1c`, OpenSBI `6ad246a1` with UART changes and U-Boot `62c9805d` with board/UART changes | A recorded power-on boot and a recorded board-RESET boot produced matching selected clock, UART and PLIC readbacks at the U-Boot prompt |
 | 2026-10-21 | Same S-mode U-Boot build | Reads at `0xe400bff8`, `0xe0002100` and `0xe0002108` raised load access faults; U-Boot's reset path required a physical board RESET |
+| 2026-10-22 | M1s Dock, S-mode U-Boot `2026.10-g62c9805d8d57-dirty`, 2 Mbps console | After CPU_RTC initialization, `loads` received 1 KiB into PSRAM; PC and RAM CRC32 both read `b70b4c26`; the original RTC control word was restored and the prompt remained responsive |
 
 ## Power-on and board-RESET readbacks
 
@@ -51,6 +52,25 @@ The [MM_GLB readback](/clocks/mm-glb/#m1s-dock-boot-readback),
 [PLIC context state](/interrupts/plic/#m1s-dock-boot-readback) and
 [U-Boot allocation](/address-space/core-views/#observed-u-boot-allocation)
 describe the corresponding interfaces.
+
+## Normal-boot UART file transfer
+
+A clean 2026-10-22 run started with CPU_RTC `0x0000000a`, applied
+`0x8000017b`, and received a 1,024-byte PC payload through U-Boot's `loads`
+command. U-Boot reported first address `0x51220000`, last address
+`0x512203ff` and total size `0x400`. Its RAM CRC32 matched the original file's
+`b70b4c26`; a read of the first 16 bytes also matched the payload.
+
+After reception, the original CPU_RTC value `0x0000000a` was restored and
+`version` returned the same U-Boot banner. The destination was PSRAM and the
+run did not execute the received data or modify NOR.
+
+An earlier stopped-counter session consumed the S7 terminator without
+returning a completion summary. The
+[delay dependency](/clocks/rtc/#u-boot-delay-dependency) explains the tested
+receiver's requirement for an advancing counter. The
+[UART description](/uart/overview/#normal-boot-file-reception) records the
+transfer interface and result.
 
 ## Interpreting the results
 

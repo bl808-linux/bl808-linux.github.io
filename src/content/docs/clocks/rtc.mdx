@@ -36,6 +36,32 @@ initialization above did not persist across those boots. The same sessions
 had a working UART console; console operation did not establish a running
 counter. See the [paired boot readbacks](/references/observations/#power-on-and-board-reset-readbacks).
 
+## U-Boot delay dependency
+
+The counter also supplies U-Boot's delay loop. In the tested build,
+`get_ticks()` reads the `time` CSR, and `udelay()` waits for that value to
+advance. This dependency applies even to a polling operation.
+
+On 2026-10-22, an S-record reception consumed and echoed its S7 terminator
+but produced no completion summary or prompt while the counter was stopped.
+The `loads` completion path calls `udelay(10000)` before printing the summary;
+with a stationary counter, that delay cannot finish. A physical board RESET
+was used to recover the stalled session.
+
+After applying the previously tested CPU_RTC configuration, a 1 KiB transfer
+completed and its RAM CRC matched the PC file:
+
+| Stage | CPU_RTC readback | Result |
+| --- | --- | --- |
+| Before initialization | `0x0000000a` | Starting state of the clean run |
+| During reception | `0x8000017b` | `loads` completed and RAM CRC was `b70b4c26` |
+| After restoration | `0x0000000a` | Original control word restored; `version` still answered |
+
+These control words describe that board session. The result establishes the
+counter-progress requirement for the tested delay path; it does not calibrate
+the duration of the delay or establish the timer's absolute frequency. See the
+[normal-boot transfer observation](/references/observations/#normal-boot-uart-file-transfer).
+
 ## Register
 
 <RegisterIndex ids={["cpu-rtc"]} />

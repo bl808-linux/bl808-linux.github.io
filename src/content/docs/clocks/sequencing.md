@@ -29,6 +29,13 @@ The counter-clock initialization sequence is:
 
 The counter-reset bit controls the counter separately from resetting the C906 core. See [CPU_RTC](/clocks/rtc/#cpu-rtc).
 
+The counter must be advancing before software depends on timer-based delays.
+The 2026-10-22 [U-Boot transfer observation](/clocks/rtc/#u-boot-delay-dependency)
+demonstrated this during polling UART reception: `loads` waited in its
+completion delay with a stopped counter, then completed after the tested
+CPU_RTC setup was applied. A responsive command prompt alone did not establish
+that the delay clock was running.
+
 ## D0 and BCLK2X divider change
 
 The divider-update sequence saves the root selections, switches to the RC32M/XCLK path, updates the dividers, sets `BCLK2X_DIV_ACT_PULSE`, waits for `BCLK2X_PROT_DONE`, and restores the source selections. Completion waits must be bounded so a failed transition can be reported.
