@@ -11,9 +11,9 @@ A physical Flash offset is explicitly labeled as such. A CPU XIP address include
 
 ## Register entries
 
-Each entry gives the register block base, byte offset, absolute address and register width. Field tables give bit ranges, access types, source-defined reset values when available, and operational descriptions. Entries may cover selected fields in a larger register; unshown bit ranges are not thereby declared reserved or writable.
+Each entry gives the register block base, byte offset, absolute address and register width. Field tables give bit ranges, access types and operational descriptions. Entries may cover selected fields in a larger register; unshown bit ranges are not thereby declared reserved or writable.
 
-**SDK reset** means the value specified by the cited SDK field metadata. It is not a runtime readback and does not imply that every form of reset resets the block. A reset value is omitted when the cited definition does not establish one.
+Runtime register values are reported with their boot and measurement context. A readback after initialization is not a hardware reset value.
 
 | Access | Meaning |
 | --- | --- |
@@ -35,4 +35,4 @@ The optional value decoder extracts the documented fields from a supplied 32-bit
 
 A clock branch name is an identifier. A rate computed from a divider requires a known parent rate. A rate property in a device tree does not initialize the clock hardware.
 
-CPU cause numbers, vendor IRQ identifiers, MCU forwarding indices, PLIC source IDs and Linux virtual IRQs are separate namespaces. The [interrupt topology](/interrupts/overview/) gives the mapping contexts used in this reference.
+CPU cause numbers, peripheral interrupt names, MCU forwarding indices, PLIC source IDs and Linux virtual IRQs are separate namespaces. The [interrupt topology](/interrupts/overview/) gives the mapping contexts used in this reference.

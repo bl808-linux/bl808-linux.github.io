@@ -6,7 +6,7 @@ description: "Clock, interrupt and address-space reference for BL808 software de
 <div class="eyebrow">Hardware / Software interface</div>
 <p class="overview-lead">Understand the clock path. Follow the interrupt. Know which address the core sees.</p>
 
-This reference describes the BL808 interfaces used to bring up firmware and operating systems. Start with a subsystem's functional description, then follow the register definitions and source references. Board observations identify the Sipeed M1s Dock and the software context in which they were recorded.
+This reference describes the BL808 interfaces used to bring up firmware and operating systems. Start with a subsystem's functional description, then follow its register entries. Board observations identify the Sipeed M1s Dock and the software context in which they were recorded.
 
 <div class="chapter-grid">
 <a href="/clocks/overview/"><small>01 / SYSTEM CONTROL</small><strong>Clocks &amp; reset →</strong><span>Trace sources, selectors, dividers and gates through to the CPU, timer and UART.</span></a>
@@ -31,7 +31,7 @@ This reference describes the BL808 interfaces used to bring up firmware and oper
 
 A clock name identifies a path through hardware. A register value selects that path; it does not measure its output. An interrupt source ID identifies an input to a controller; it is not a Linux virtual IRQ number. An address identifies a location in a particular address space; two aliases need not be two memories.
 
-Each register entry links to its definition. The [notation guide](/references/notation/) defines access types, address intervals and reset-value conventions. [Sources and revisions](/references/sources/) identifies the manuals and code used for this edition.
+Each register entry gives its address, bit fields and access types. The [notation guide](/references/notation/) explains the tables and address intervals. [Board observations](/references/observations/) records the runtime results and their software context.
 
 ## Board context
 

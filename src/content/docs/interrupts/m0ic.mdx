@@ -6,7 +6,7 @@ description: "MCU interrupt status, mask and clear controls forwarding SDH to D0
 import Register from '../../../components/Register.astro';
 import RegisterIndex from '../../../components/RegisterIndex.astro';
 
-The MCU interrupt-forwarding controls lie in GLB at `0x20000050` through `0x20000064`. The SDK calls their fields `np_int_sta*`, `np_int_mask*` and `np_int_clr*`; the board experiments call this block **M0IC**.
+The MCU interrupt-forwarding controls lie in GLB at `0x20000050` through `0x20000064`. Their fields are `np_int_sta*`, `np_int_mask*` and `np_int_clr*`; the board experiments call this block **M0IC**.
 
 ## SDH delivery path
 
@@ -27,7 +27,7 @@ For a successful CMD8 command, the handler recorded:
 | SDH status | `0x00000001` | Command complete without an error |
 | CMD8 response | `0x000001aa` | Fresh R7 response with the requested echo |
 
-Source 81 is named `WL_ALL` in the D0 SDK enumeration. The child index 17 and the PLIC claim 81 identify different controllers. The successful SDH observation establishes this specific forwarding route.
+Source 81 is labeled `WL_ALL` in the [D0 source map](/interrupts/sources/). The child index 17 and the PLIC claim 81 identify different controllers. The successful SDH observation establishes this specific forwarding route.
 
 ## Masking and acknowledgement
 

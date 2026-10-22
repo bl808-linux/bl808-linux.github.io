@@ -29,7 +29,7 @@ The sizes are block windows, not counts of implemented registers. For example, t
 | `0x3ef80000` | `0x3f000000` | 512 KiB | MM DRAM, on-chip SRAM | `0x7ef80000` |
 | `0x3f000000` | `0x3f008000` | 32 KiB | MM VRAM, on-chip SRAM | `0x7f000000` |
 
-The SDK name **MM DRAM** refers to internal SRAM. External PSRAM is a separate device. WRAM ownership and the shared-bank release controls affect its use; address aliases do not increase total capacity.
+**MM DRAM** refers to internal SRAM. External PSRAM is a separate device. WRAM ownership and the shared-bank release controls affect its use; address aliases do not increase total capacity.
 
 See [core views and aliases](/address-space/core-views/) for cache and protection semantics.
 
@@ -47,4 +47,3 @@ The address-space aperture and the fitted device capacity are different quantiti
 - [GLB clock controls](/clocks/glb/) and [MM_GLB](/clocks/mm-glb/).
 - [PLIC register addressing](/interrupts/plic/#register-addressing).
 - [C906 time-counter clock](/clocks/rtc/).
-- [Sources](/references/sources/#memory-and-register-definitions): vendor `bl808.h`, the reference manual and board boot sources.

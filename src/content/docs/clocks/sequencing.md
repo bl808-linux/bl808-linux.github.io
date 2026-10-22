@@ -16,19 +16,19 @@ The clock configuration must exist before a consumer uses the clock. A UART FDT 
 
 ## C906 counter clock
 
-The vendor `CPU_Set_MTimer_CLK` sequence is:
+The counter-clock initialization sequence is:
 
 1. Read the CPU_RTC control word and clear the clock-enable bit.
 2. Update the divider field while preserving the other fields.
 3. Set or clear the enable bit according to the requested state.
 
-`CPU_Reset_MTimer` asserts and then clears the counter-reset bit. This is a counter operation, separate from resetting the C906 core. See [CPU_RTC](/clocks/rtc/#cpu-rtc).
+The counter-reset bit controls the counter separately from resetting the C906 core. See [CPU_RTC](/clocks/rtc/#cpu-rtc).
 
 ## D0 and BCLK2X divider change
 
-SDK `GLB_Set_DSP_System_CLK_Div` saves the root selections, switches to the RC32M/XCLK path, updates the dividers, sets `BCLK2X_DIV_ACT_PULSE`, waits for `BCLK2X_PROT_DONE`, and restores the source selections. The implementation includes a bounded wait and returns an error when completion is not observed.
+The divider-update sequence saves the root selections, switches to the RC32M/XCLK path, updates the dividers, sets `BCLK2X_DIV_ACT_PULSE`, waits for `BCLK2X_PROT_DONE`, and restores the source selections. Completion waits must be bounded so a failed transition can be reported.
 
-This handshake is why a divider register write alone does not describe the complete SDK transition sequence. The corresponding [MM_GLB fields](/clocks/mm-glb/#mm-control) identify the request and status bits.
+This handshake is why a divider register write alone does not describe the complete transition sequence. The corresponding [MM_GLB fields](/clocks/mm-glb/#mm-control) identify the request and status bits.
 
 ## UART3 source setup
 
@@ -38,6 +38,4 @@ Changing the parent or divider of an active UART changes the relationship betwee
 
 ## Reset domains
 
-The vendor manual's Reset and Clock chapter distinguishes chip, MCU, multimedia, peripheral and core resets. A D0-core reset and a multimedia-peripheral reset have different scopes. Use the specific register definition for the intended target rather than treating every reset as a complete return to the same chip state.
-
-Definitions and sequences are linked in [sources and revisions](/references/sources/#clock-definitions).
+Chip, MCU, multimedia, peripheral and core resets have different scopes. A D0-core reset and a multimedia-peripheral reset affect different targets. Use the specific register control for the intended target rather than treating every reset as a complete return to the same chip state.

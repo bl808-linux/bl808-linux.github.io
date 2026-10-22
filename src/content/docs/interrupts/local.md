@@ -41,7 +41,3 @@ A running [counter clock](/clocks/rtc/) is required for both meaningful time rea
 On 2026-10-20, a bounded S-mode RAM probe requested three SBI deadlines, each 10,000 counter ticks ahead. It observed three supervisor timer interrupts with cause `0x8000000000000005`; measured intervals were 10,423, 10,421 and 10,421 counter ticks including software overhead. The probe restored its supervisor context and returned to U-Boot.
 
 These are counter-tick intervals in that boot configuration. No conversion to independently calibrated microseconds is made here.
-
-## Source definitions
-
-See [sources](/references/sources/#interrupt-definitions) for OpenSBI's T-HEAD CLINT quirk, ACLINT offsets and Linux's RISC-V timer driver.

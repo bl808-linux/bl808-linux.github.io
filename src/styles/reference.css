@@ -58,7 +58,7 @@ body { font-feature-settings: 'ss01'; }
 .register .bits { white-space: nowrap; }
 .access { font: .7rem var(--sl-font-mono); color: var(--sl-color-accent-high); }
 .register tr:target { background: var(--sl-color-accent-low); }
-.register-source { padding-top: .6rem; border-top: 1px solid var(--ref-line); color: var(--sl-color-gray-3); font-size: .71rem; line-height: 1.6; }
+.register-notation { padding-top: .6rem; border-top: 1px solid var(--ref-line); color: var(--sl-color-gray-3); font-size: .71rem; line-height: 1.6; }
 .register-decoder { font-size: .79rem; }
 .register-decoder summary { cursor: pointer; color: var(--sl-color-accent-high); }
 .register-decoder label { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; margin-top: .8rem; }

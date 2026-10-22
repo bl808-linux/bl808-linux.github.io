@@ -54,4 +54,4 @@ UART3 is assigned D0 source ID 20 in the [source map](/interrupts/sources/). Per
 
 The working polling console uses eight data bits, one stop bit and no parity. It initializes the FIFOs, masks interrupts for polling operation, sets the bit periods and enables the TX/RX logic. Clock and pad routing are configured before this peripheral sequence.
 
-Continue to the [register reference](/uart/registers/) for offsets, fields and reset metadata.
+Continue to the [register reference](/uart/registers/) for offsets, fields and access types.

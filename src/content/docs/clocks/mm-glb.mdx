@@ -19,11 +19,11 @@ MM_GLB begins at `0x30007000`. It controls the C906 root path, multimedia buses 
 | | 2 or 3 | CPUPLL_400M branch |
 | `MM_CLK_CTRL_CPU[12]` | 1 | D0 core clock enabled |
 
-The PLL-path selector chooses a branch. Some branch parents have another selector in GLB, as described by SDK `Clock_DSP_Get_Muxpll_*_Sel_Val`. The branch's name alone does not establish its actual rate.
+The PLL-path selector chooses a branch. Some branch parents have another selector in GLB. The branch's name alone does not establish its actual rate.
 
 ## Multimedia buses
 
-`MM_CLK_CPU[7:0]` divides the D0 root. `MM_CLK_CPU[23:16]` controls MM_BCLK2X, and bits `[31:24]` control the independently selected MM_BCLK1X path. The SDK switches to XCLK while updating D0/BCLK2X dividers, requests the divider change, waits for completion and restores the parent selection.
+`MM_CLK_CPU[7:0]` divides the D0 root. `MM_CLK_CPU[23:16]` controls MM_BCLK2X, and bits `[31:24]` control the independently selected MM_BCLK1X path. Divider updates use the XCLK path while requesting the D0/BCLK2X change, waiting for completion and restoring the parent selection.
 
 ## UART3 source
 

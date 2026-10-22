@@ -25,7 +25,7 @@ This relationship describes that group mapping. It is not a conversion rule for 
 
 ## Cache aliases
 
-The SDK exposes cached and uncached views of MCU SRAM, MM DRAM and MM VRAM. Each pair names the same physical storage. Changing an alias changes the CPU access path; it does not allocate a second memory.
+MCU SRAM, MM DRAM and MM VRAM have cached and uncached address views. Each pair names the same physical storage. Changing an alias changes the CPU access path; it does not allocate a second memory.
 
 A coherent software policy must account for the selected alias, the live cache configuration and the ownership of a buffer. The linker location alone does not establish the current cache state.
 
@@ -46,4 +46,4 @@ A failed S-mode access describes that access under the active firmware protectio
 | Establish M-mode runtime protection | OpenSBI domain initialization |
 | Allocate and map OS memory | Linux from the supplied device tree |
 
-The [address map](/address-space/memory-map/) describes the memory windows. The [source index](/references/sources/) links the firmware and vendor definitions used here.
+The [address map](/address-space/memory-map/) describes the memory windows.

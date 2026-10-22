@@ -10,7 +10,7 @@ The C906 time counter has a dedicated clock control in **MM_MISC**, at `0x300000
 
 ## Clock and interrupt roles
 
-The SDK derives the counter clock from the D0 core clock:
+The counter clock follows the D0 core clock through its divider:
 
 ```text
 counter rate = D0 core rate / (C906_RTC_DIV + 1)
@@ -20,13 +20,13 @@ The counter supplies time. A timer compare supplies an event deadline. OpenSBI m
 
 ## Programming sequence
 
-The SDK clock API disables the counter clock, updates the divisor field and enables the clock as requested. The reset API asserts `C906_RTC_RST` and then clears it. Counter resets and divider changes alter the time base seen by all consumers; initialize this path before those consumers start using it.
+For initialization, disable the counter clock, update the divisor field and enable the clock as required. The counter-reset control is `C906_RTC_RST`. Counter resets and divider changes alter the time base seen by all consumers; initialize this path before those consumers start using it.
 
 `/cpus/timebase-frequency` must describe the resulting counter rate. The property is a description, not a hardware initialization operation.
 
 ## Observed enable behavior
 
-On the M1s Dock on 2026-10-21, `CPU_RTC` read as `0x0000000a`: divider encoding 10, reset clear, clock enable clear. Three `time` CSR samples separated by fixed-count instruction loops all returned zero. After setting the enable and divider fields using the vendor startup configuration, the same bounded probe returned increasing samples: `330982`, `344140`, `396772`.
+On the M1s Dock on 2026-10-21, `CPU_RTC` read as `0x0000000a`: divider encoding 10, reset clear, clock enable clear. Three `time` CSR samples separated by fixed-count instruction loops all returned zero. After writing `0x8000017b` to enable the clock with divider encoding 379, the same bounded probe returned increasing samples: `330982`, `344140`, `396772`.
 
 With the counter running, Linux completed `check_unaligned_access_all_cpus()` and proceeded to its root-filesystem mount. The observation establishes the clock-enable dependency. It does not assign an independently measured absolute frequency to this configuration.
 

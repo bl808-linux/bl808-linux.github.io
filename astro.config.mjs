@@ -37,8 +37,8 @@ export default defineConfig({
         { label: 'Functional description', slug: 'uart/overview' },
         { label: 'Registers', slug: 'uart/registers' },
       ] },
-      { label: 'References', collapsed: true, items: [
-        { label: 'Sources & revisions', slug: 'references/sources' },
+      { label: 'Reading guide', collapsed: true, items: [
+        { label: 'Board observations', slug: 'references/observations' },
         { label: 'Reading the reference', slug: 'references/notation' },
       ] },
     ],

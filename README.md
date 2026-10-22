@@ -19,7 +19,8 @@ Pages live in `src/content/docs`. Register data lives in `src/data/registers.jso
 the shared register component renders metadata, bit diagrams and field tables.
 Only established definitions and verified behavior belong in this repository.
 Experimental notes, raw laboratory records and unresolved claims stay outside
-the published site. See Sources and Reading the reference for editorial rules.
+the published site. See Board observations and Reading the reference for
+measurement context and notation.
 
 Pushes to `main` build and deploy `dist/` through GitHub Pages. Pull requests
 run the same build and browser checks without deploying. Hardware access is

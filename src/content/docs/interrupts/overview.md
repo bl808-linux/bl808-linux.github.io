@@ -12,7 +12,7 @@ D0 receives **core-local interrupts** and **external peripheral interrupts** thr
 | Number | Meaning | Example |
 | --- | --- | --- |
 | CPU interrupt cause | Class of interrupt entering a hart | Supervisor timer 5; supervisor external 9 |
-| SDK IRQ number | SDK's assigned interrupt identifier | D0 UART3 uses `IRQ_NUM_BASE + 4`, with base 16 |
+| Peripheral interrupt name | Name used to identify a peripheral request | UART3 |
 | MCU forwarding source | Bit index in the forwarding controller | SDH is source 17 |
 | PLIC source ID | Peripheral input claimed from the PLIC | SDH forwarding was claimed as 81 |
 | Linux IRQ number | Kernel-assigned virtual IRQ | Assigned by Linux's IRQ domain mapping |

@@ -10,9 +10,9 @@ GLB is the MCU-side global control block at `0x20000000`. This page covers the M
 
 ## MCU clocks
 
-The MCU root comes from the [HBN / PDS selectors](/clocks/hbn-pds/). `SYS_CFG0` holds the MCU core/high-speed divider and peripheral-bus divider. The SDK clock model computes the bus rate from the core path through the bus divisor.
+The MCU root comes from the [HBN / PDS selectors](/clocks/hbn-pds/). `SYS_CFG0` holds the MCU core/high-speed divider and peripheral-bus divider. The bus rate follows the core path through the bus divisor.
 
-Changing the divider value is not the complete transition protocol. The SDK's bus-divider update sequence also requests application of the setting. See [initialization and reset](/clocks/sequencing/).
+Changing the divider value is not the complete transition protocol. The bus-divider update sequence also requests application of the setting. See [initialization and reset](/clocks/sequencing/).
 
 ## SDH has two gates
 
@@ -24,7 +24,7 @@ GLB bus    → CGEN_CFG2 SDH bus gate               → register interface
 SDH internal clock → host clock divider/output enable → card CLK pad
 ```
 
-The parent selector encodings below come from the SDK. The SDH interrupt path is described under [MCU interrupt forwarding](/interrupts/m0ic/#sdh-delivery-path).
+The SDH interrupt path is described under [MCU interrupt forwarding](/interrupts/m0ic/#sdh-delivery-path).
 
 ## Registers
 
