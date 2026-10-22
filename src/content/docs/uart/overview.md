@@ -54,4 +54,19 @@ UART3 is assigned D0 source ID 20 in the [source map](/interrupts/sources/). Per
 
 The working polling console uses eight data bits, one stop bit and no parity. It initializes the FIFOs, masks interrupts for polling operation, sets the bit periods and enables the TX/RX logic. Clock and pad routing are configured before this peripheral sequence.
 
+## M1s Dock boot readback
+
+The paired 2026-10-21 power-on and board-RESET sessions read the following
+values at the U-Boot prompt while exchanging console commands at 2 Mbps:
+
+| Register | Address | Readback in both sessions |
+| --- | --- | --- |
+| UTX_CONFIG | `0x30002000` | `0x00000f05` |
+| URX_CONFIG | `0x30002004` | `0x00000701` |
+| UART_BIT_PRD | `0x30002008` | `0x00130013` |
+
+The [MM_GLB readbacks](/clocks/mm-glb/#m1s-dock-boot-readback) record the source
+selector and divider settings in the same sessions. These are operational
+readbacks under the [recorded boot configuration](/references/observations/#power-on-and-board-reset-readbacks).
+
 Continue to the [register reference](/uart/registers/) for offsets, fields and access types.

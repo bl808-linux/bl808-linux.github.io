@@ -28,7 +28,13 @@ For initialization, disable the counter clock, update the divisor field and enab
 
 On the M1s Dock on 2026-10-21, `CPU_RTC` read as `0x0000000a`: divider encoding 10, reset clear, clock enable clear. Three `time` CSR samples separated by fixed-count instruction loops all returned zero. After writing `0x8000017b` to enable the clock with divider encoding 379, the same bounded probe returned increasing samples: `330982`, `344140`, `396772`.
 
-With the counter running, Linux completed `check_unaligned_access_all_cpus()` and proceeded to its root-filesystem mount. The observation establishes the clock-enable dependency. It does not assign an independently measured absolute frequency to this configuration.
+With the counter running, Linux completed `check_unaligned_access_all_cpus()` and proceeded to its root-filesystem mount. The observation establishes that time advanced with this clock configuration. It does not assign an independently measured absolute frequency to this configuration.
+
+The later power-on and board-RESET comparison again read `CPU_RTC = 0x0000000a`
+and `time = 0` at the U-Boot prompt, before any manual clock change. The live
+initialization above did not persist across those boots. The same sessions
+had a working UART console; console operation did not establish a running
+counter. See the [paired boot readbacks](/references/observations/#power-on-and-board-reset-readbacks).
 
 ## Register
 

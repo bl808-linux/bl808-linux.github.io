@@ -30,6 +30,18 @@ The D0 boot device tree describes `thead,c900-clint` at `0xe4000000`. The OpenSB
 
 The OpenSBI T-HEAD CLINT match uses the `clint_without_mtime` quirk. Its counter-read path uses the time CSR rather than a generic memory-mapped MTIME register. Do not derive a D0 MTIME read address solely from a generic SiFive CLINT layout.
 
+## Observed S-mode access boundary
+
+In the 2026-10-21 S-mode U-Boot session, `md.q 0xe400bff8 1` raised
+`Load access fault`, with `TVAL = 0x00000000e400bff8`. The boot's OpenSBI
+domain listing gave S/U no access to `[0xe4000000, 0xe400c000)`.
+The U-Boot error path printed `reset not supported yet` and required a
+physical board RESET.
+
+That failed MMIO read is separate from the available `time` CSR and SBI TIME
+interface. In the [paired boot readbacks](/references/observations/#power-on-and-board-reset-readbacks),
+S-mode `time` reads returned zero while the counter clock was disabled.
+
 ## Timer delivery
 
 In the documented S-mode path, Linux reads `time` to obtain the clocksource value and calls SBI TIME to set an event deadline. OpenSBI programs the machine timer and exposes the supervisor timer event. Linux enables `STIE` and dispatches its timer event handler on supervisor timer interrupts.

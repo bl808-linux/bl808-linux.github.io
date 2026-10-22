@@ -28,6 +28,31 @@ Let `B = 0xe0000000`, `s` be a source ID and `c` a context index. The source-0 i
 
 For a bitmap word, the source's bit is `s % 32`. Source 81 therefore uses word 2, bit 17. The [SDH forwarding path](/interrupts/m0ic/#sdh-delivery-path) exercised this source and the supervisor context.
 
+For hart 0's two connected contexts, the addresses are:
+
+| Context | CPU interrupt | Enable word 0 | Threshold | Claim/complete |
+| --- | --- | --- | --- | --- |
+| 0 | Machine external, cause 11 | `0xe0002000` | `0xe0200000` | `0xe0200004` |
+| 1 | Supervisor external, cause 9 | `0xe0002080` | `0xe0201000` | `0xe0201004` |
+
+Enable windows advance by `0x80` bytes per context. The pending bitmap is a
+separate window beginning at `0xe0001000`.
+
+## M1s Dock boot readback
+
+In the paired 2026-10-21 power-on and board-RESET sessions, S-mode code read
+the first three enable words of context 0 (`0xe0002000`, `0xe0002004`,
+`0xe0002008`) and context 1 (`0xe0002080`, `0xe0002084`, `0xe0002088`).
+All six words were zero. Both context thresholds read `0x7`, and `sie` was
+zero. These values describe the prompt state before a peripheral-IRQ test,
+not the configuration used by the earlier SDH handler.
+
+In separate reads on that build, `md.l` at `0xe0002100` and `0xe0002108`
+raised load access faults, with each address reported in `TVAL`. By the
+address formula above, these are context 2 enable-word addresses, not
+context 1. The successful context-1 reads and these context-2 faults are
+different observations. See the [board context](/references/observations/).
+
 ## Claim and complete
 
 A read of the claim register returns an enabled pending source ID and atomically claims it. Zero means no source was claimed. A write of the handled ID to the same register completes that claim.

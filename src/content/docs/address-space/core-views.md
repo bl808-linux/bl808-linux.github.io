@@ -37,6 +37,24 @@ In the SRAM boot path, OpenSBI remains resident in `[0x3ef80000, 0x3f000000)`. T
 
 A failed S-mode access describes that access under the active firmware protection policy. It is not a complete specification of a physical memory bank or proof that an alias is absent.
 
+## Observed U-Boot allocation
+
+In the paired 2026-10-21 power-on and board-RESET sessions, `bdinfo` reported:
+
+| Item | Recorded address or interval |
+| --- | --- |
+| DRAM bank | `[0x50000000, 0x54000000)` |
+| U-Boot LMB reserved interval | `[0x52da6750, 0x54000000)` |
+| Relocated U-Boot address | `0x53fc7000` |
+| U-Boot FDT address | `0x53da6760` |
+| Firmware-supplied FDT address | `0x51ff8000` |
+
+These are allocations for that image, not fixed SoC reservations or a
+full-capacity memory test. A load buffer must preserve live data such as the
+firmware-supplied FDT as well as the reported reserved interval. Obtain the
+current addresses for the image being used; see the
+[recorded boot context](/references/observations/#power-on-and-board-reset-readbacks).
+
 ## Core and privilege context
 
 | Operation | Context that establishes it |

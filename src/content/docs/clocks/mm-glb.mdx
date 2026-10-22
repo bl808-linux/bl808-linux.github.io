@@ -31,6 +31,26 @@ The MM UART selector is `MM_CLK_CTRL_CPU[5:4]`: 0 selects MM_BCLK1X, 1 selects M
 
 The console setup chooses XTAL for MM_XCLK, selects MM_XCLK for UART, and uses divider encoding zero. UART3's own [bit-period register](/uart/registers/#uart-period) then sets the serial baud rate.
 
+## M1s Dock boot readback
+
+At the U-Boot prompt in the paired 2026-10-21 power-on and board-RESET
+sessions, these values matched:
+
+| Register | Address | Readback |
+| --- | --- | --- |
+| MM_CLK_CTRL_CPU | `0x30007000` | `0x45105d2f` |
+| MM_CLK_CPU | `0x30007004` | `0x00010100` |
+| MM_CLK_CTRL_PERI | `0x30007010` | `0x00810300` |
+
+The selector fields decode to XTAL for MM_XCLK, the PLL path for the D0 root,
+PLL-path encoding 1, and MM_XCLK for UART3. The D0 divider encoding is zero;
+the UART3 source-divider encoding is zero with its enable bit set. These are
+the recorded selector and divider settings, not measurements of PLL output.
+
+See the [board context](/references/observations/#power-on-and-board-reset-readbacks)
+for the comparison conditions. These values are post-boot state rather than
+reset defaults.
+
 ## Registers
 
 <RegisterIndex ids={["mm-control", "mm-dividers", "mm-peripheral"]} />

@@ -14,6 +14,11 @@ description: "Established clock-update sequences and ownership across the boot h
 
 The clock configuration must exist before a consumer uses the clock. A UART FDT driver does not necessarily initialize the SoC clock mux or the pads. An SBI TIME extension does not itself establish a running time source.
 
+In the recorded 2026-10-21 power-on and board-RESET boots, the loader and
+OpenSBI established a working UART console while CPU_RTC still read
+`0x0000000a` and the `time` CSR read zero. The [paired readbacks](/references/observations/#power-on-and-board-reset-readbacks)
+describe the state after the boot chain, rather than the chip's reset defaults.
+
 ## C906 counter clock
 
 The counter-clock initialization sequence is:

@@ -12,8 +12,45 @@ applies to the boot configuration and operation recorded for that session.
 | --- | --- | --- |
 | 2026-10-20 | M1s Dock, generic OpenSBI and S-mode U-Boot diagnostic | Repeated SDH command/forced events reached supervisor external cause 9 with PLIC claim 81 and MCU source bit 17 |
 | 2026-10-20 | M1s Dock, S-mode timer diagnostic | Three SBI timer requests produced three supervisor timer interrupts |
-| 2026-10-21 | M1s Dock, firmware `2f31e1c`, OpenSBI `6ad246a1` with UART patch, U-Boot `62c9805d` with board/UART changes, Linux `a804c574` | CPU_RTC clock enable changed fixed-zero time reads into advancing time reads; Linux completed the unaligned-access probe and reached rootfs mount |
+| 2026-10-21 | M1s Dock, firmware `2f31e1c`, OpenSBI `6ad246a1` with UART patch, U-Boot `62c9805d` with board/UART changes, Linux `a804c574` | Applying CPU_RTC configuration `0x8000017b` changed fixed-zero time reads into advancing time reads; Linux completed the unaligned-access probe and reached rootfs mount |
 | 2026-10-21 | M1s Dock, SRAM OpenSBI and S-mode U-Boot | UART3 console output and paced command input worked at 2 Mbps |
+| 2026-10-21 | M1s Dock, firmware `2f31e1c`, OpenSBI `6ad246a1` with UART changes and U-Boot `62c9805d` with board/UART changes | A recorded power-on boot and a recorded board-RESET boot produced matching selected clock, UART and PLIC readbacks at the U-Boot prompt |
+| 2026-10-21 | Same S-mode U-Boot build | Reads at `0xe400bff8`, `0xe0002100` and `0xe0002108` raised load access faults; U-Boot's reset path required a physical board RESET |
+
+## Power-on and board-RESET readbacks
+
+The comparison used one boot after USB power was disconnected and reconnected,
+and one boot after the board RST button was pressed. Both reached U-Boot
+`2026.10-g62c9805d8d57-dirty`, built on 2026-10-21 at 19:22:34, with the same
+images. A 752-byte RAM readback probe passed upload CRC `123440e5` and returned
+normally in both sessions.
+
+The selected values below matched in those two sessions, before the manual RTC
+clock configuration was applied:
+
+| Interface | Address | Value in both sessions |
+| --- | --- | --- |
+| CPU_RTC | `0x30000018` | `0x0000000a` |
+| MM_CLK_CTRL_CPU | `0x30007000` | `0x45105d2f` |
+| MM_CLK_CPU | `0x30007004` | `0x00010100` |
+| MM_CLK_CTRL_PERI | `0x30007010` | `0x00810300` |
+| UART3 UTX_CONFIG | `0x30002000` | `0x00000f05` |
+| UART3 URX_CONFIG | `0x30002004` | `0x00000701` |
+| UART3 UART_BIT_PRD | `0x30002008` | `0x00130013` |
+| Context 0 threshold | `0xe0200000` | `0x00000007` |
+| Context 1 threshold | `0xe0201000` | `0x00000007` |
+| `sie` CSR | Hart 0 | `0x0` |
+| `time` CSR | Hart 0 | `0x0` |
+
+These are values after boot-chain initialization, not hardware reset defaults.
+The comparison establishes agreement for the listed values in those sessions,
+not equality of every register or a guarantee for other images.
+
+The [MM_GLB readback](/clocks/mm-glb/#m1s-dock-boot-readback),
+[UART readback](/uart/overview/#m1s-dock-boot-readback),
+[PLIC context state](/interrupts/plic/#m1s-dock-boot-readback) and
+[U-Boot allocation](/address-space/core-views/#observed-u-boot-allocation)
+describe the corresponding interfaces.
 
 ## Interpreting the results
 
