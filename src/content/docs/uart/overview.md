@@ -50,6 +50,26 @@ UART interrupt status, enable, mask and clear are separate controls. A mask bit 
 
 UART3 is assigned D0 source ID 20 in the [source map](/interrupts/sources/). Peripheral status and FIFO polling remain different operations from PLIC claim/complete.
 
+## Observed RX interrupt delivery
+
+On 2026-10-23, a RAM-resident D0 S-mode diagnostic received actual host bytes
+`A` and `B` through UART3. Each reception entered supervisor external cause
+9 and claimed PLIC source 20 (`0x14`). Draining the RX FIFO and managing the
+interrupt mask allowed the second delivery.
+
+```text
+UART3 RX → D0 PLIC source 20 → supervisor external cause 9
+```
+
+This path goes directly to the PLIC; it does not use the MCU forwarding
+controller exercised by SDH. Simultaneous UART/SDH tests also confirmed
+[PLIC priority arbitration](/interrupts/plic/#observed-priority-arbitration).
+
+These are native UART RX routing tests. The Linux shell in the storage
+experiments used the polling SBI `hvc0` console. Native Linux UART-driver
+RX/TX interrupt operation and UART TX-interrupt behavior were not validated
+by these tests.
+
 ## Console initialization
 
 The working polling console uses eight data bits, one stop bit and no parity. It initializes the FIFOs, masks interrupts for polling operation, sets the bit periods and enables the TX/RX logic. Clock and pad routing are configured before this peripheral sequence.

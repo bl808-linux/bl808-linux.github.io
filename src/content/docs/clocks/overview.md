@@ -29,7 +29,7 @@ f_out = f_parent / (DIV + 1)
 
 A disabled gate prevents delivery of that clock. Bus and module gates may both be required. The SDH host additionally divides its module clock before driving the card clock; the UART bit-period register adds another divider after its source clock.
 
-Names such as `MM_MUXPLL_320M` identify clock branches. A clock-tree entry is not a frequency measurement. The reference describes the selectors and divider arithmetic without assigning an observed absolute rate to a PLL.
+Names such as `MM_MUXPLL_320M` identify clock branches. A clock-tree entry is not a frequency measurement. A programmed rate can be calculated from the reference and live PLL settings; see the [recorded SDH parents](/clocks/glb/#recorded-sdh-parent-rates). Such a calculation remains distinct from measuring a clock pin.
 
 ## Clock control and device trees
 

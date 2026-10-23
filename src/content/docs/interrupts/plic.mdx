@@ -61,6 +61,29 @@ Reading claim/complete is an operation with side effects, not passive inspection
 
 The peripheral and any intermediate latch must be handled before completing a level request that would otherwise remain asserted. The actual trigger type and handler policy belong to the source and controller binding.
 
+## Observed priority arbitration
+
+The 2026-10-23 M1s Dock S-mode diagnostic exercised UART3 source 20 and the
+SDH forwarding source 81. Priority zero, priority equal to the context
+threshold, and a cleared context-enable bit each suppressed notification.
+Removing the tested block allowed the retained request to be delivered.
+The implemented priority field read back a maximum value of 7.
+
+With both sources pending, the claim order was:
+
+| Configuration | First claim | Second claim |
+| --- | --- | --- |
+| UART priority higher | 20 | 81 |
+| SDH forwarding priority higher | 81 | 20 |
+| Equal nonzero priorities above the threshold | 20 | 81 |
+
+The public OpenC906
+[PLIC input module](https://github.com/XUANTIE-RV/openc906/blob/b0c06eb1f8b3bae663bd8b87eac89ff48e68a57f/C906_RTL_FACTORY/gen_rtl/plic/rtl/plic_int_kid.v)
+was also simulated for level/edge, claim/complete and priority-zero behavior.
+That simulation covers the named RTL revision. The board tests establish
+the observed BL808 paths; the public module does not describe the BL808
+MCU forwarding block or its complete SoC integration.
+
 ## Concrete source-81 / context-1 registers
 
 <RegisterIndex ids={["plic-priority", "plic-pending", "plic-enable", "plic-threshold", "plic-claim"]} />

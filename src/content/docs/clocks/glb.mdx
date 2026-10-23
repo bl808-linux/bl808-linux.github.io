@@ -26,6 +26,39 @@ SDH internal clock → host clock divider/output enable → card CLK pad
 
 The SDH interrupt path is described under [MCU interrupt forwarding](/interrupts/m0ic/#sdh-delivery-path).
 
+## Recorded SDH parent rates
+
+On the M1s Dock on 2026-10-23, the XTAL marker at `0x2000f10c` read
+`0xffff5804`, identifying a 40 MHz reference. Decoding the programmed PLL
+settings gave a CPU PLL output of 380 MHz and Wi-Fi PLL VCO of 960 MHz.
+The SDH selector therefore chose between:
+
+| `SDH_CFG0` selector | Parent branch | Rate from the recorded PLL settings |
+| --- | --- | --- |
+| 0 | Wi-Fi PLL VCO / 10 | 96 MHz |
+| 1 | CPU PLL / 4 | 95 MHz |
+
+The CPU PLL CFG1 at `0x200087d4` read `0x01100418` and SDMIN at
+`0x200087e8` read `0x00013000`. Wi-Fi PLL CFG1 at `0x20000814` read
+`0x01110216` and SDMIN at `0x20000828` read `0x91800000`.
+These rates describe the programmed state in that session. A fixed
+100 MHz assumption for selector 1 would misreport that state. D0's selected
+execution path was separately observed at about 320 MHz; it should not be
+inferred from the CPU PLL output alone.
+
+Both SDH parents completed CMD8 interrupt tests with module divisors
+1, 2, 4, 8 and 1. Native M0 USB continued to respond during each parent
+selection. Linux subsequently passed
+[SDMA write/readback and restoration](/storage/sd-card/#native-linux-pio-and-sdma)
+with both parents. The tests changed SDH controls without retuning the
+shared root PLLs; the checked shared PLL and USB register words matched
+their saved values afterward.
+
+The native Linux tests used a one-bit card bus. A requested 4 MHz ceiling
+resulted in a software-reported card clock of 3 MHz from the 96 MHz module
+input, or 2,968,750 Hz from 95 MHz. The host divider selected /32. These are
+register-derived rates, not clock-pad waveform measurements.
+
 ## Registers
 
 <RegisterIndex ids={["glb-system", "glb-sdh", "glb-gates"]} />

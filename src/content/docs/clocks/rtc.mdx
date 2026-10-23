@@ -62,6 +62,25 @@ counter-progress requirement for the tested delay path; it does not calibrate
 the duration of the delay or establish the timer's absolute frequency. See the
 [normal-boot transfer observation](/references/observations/#normal-boot-uart-file-transfer).
 
+## Divider and reset follow-up
+
+On 2026-10-23, a bounded RAM diagnostic compared the `cycle` and `time`
+counters with divider encodings 379, 189 and 379. Their measured ratios were
+approximately 380, 190 and 380 cycles per TIME tick. Clearing the clock-enable
+bit froze TIME. Asserting the counter-reset bit held TIME at zero; releasing
+reset and enabling its clock restarted counting.
+
+Host elapsed-time checks agreed with about 320 MHz execution and nominal
+counter rates of 842,105 Hz and 1,684,211 Hz for those divisors. Serial and
+host timing limit this calibration's precision. It is not an independent
+oscillator or clock-pin measurement.
+
+Three SBI timer deadlines delivered supervisor cause 5 with rearming, and
+disarming prevented further delivery during the observation window. A Linux
+initramfs shell also showed advancing timer IRQ counts and uptime and remained
+responsive after idle. These checks exercise the counter and SBI timer path
+separately from peripheral IRQ delivery.
+
 ## Register
 
 <RegisterIndex ids={["cpu-rtc"]} />

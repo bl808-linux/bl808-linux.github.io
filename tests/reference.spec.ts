@@ -43,7 +43,7 @@ test('static reference remains readable without JavaScript', async ({ browser })
 test('site search resolves a register term', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /Search/ }).click();
-  const search = page.getByRole('searchbox').last();
+  const search = page.getByRole('textbox', { name: 'Search', exact: true });
   await search.fill('C906_RTC_DIV');
   await expect(page.locator('.pagefind-ui__result-link').first()).toBeVisible();
   await expect(page.locator('.pagefind-ui__result-link').first()).toContainText(/RTC|counter/i);
@@ -64,5 +64,5 @@ test('published navigation contains no experimental section', async ({ page }) =
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('BL808 Reference Manual');
   await expect(page.locator('nav a[href*="experimental"], nav a[href*="experiments"]')).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Clocks & reset →', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Clocks & reset →/ })).toBeVisible();
 });

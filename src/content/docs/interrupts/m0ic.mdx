@@ -37,6 +37,56 @@ The tested handler quiesced CPU delivery, claimed the PLIC source, captured the 
 
 The relevant SDH registers are its event status at `0x20060030`, status-enable at `0x20060034`, and signal-enable at `0x20060038`. A source can have an event status without signaling an interrupt if one of these layers suppresses delivery.
 
+## Observed latch behavior
+
+The 2026-10-23 M1s Dock diagnostic held the SDH interrupt signal asserted
+and exercised the forwarding controls. Both a forced command error and a
+successful CMD8 completion produced the following results:
+
+| Operation | Observed result |
+| --- | --- |
+| Complete PLIC claim 81 while the MCU latch remains set | Claim 81 can be delivered again |
+| Clear MCU bit 17 while the SDH signal remains asserted | MCU status clears; it does not autonomously reassert during the observation window |
+| Mask, then unmask the still-asserted source | MCU status and claim 81 regenerate |
+| Disable, then enable the SDH interrupt signal | MCU status and claim 81 regenerate |
+| Mask, clear and read back the SDH event, clear MCU status, complete, then unmask | No repeated delivery during the observation window |
+
+Masking therefore does not retire an existing latch, and clearing a latch
+does not guarantee a new notification from an unchanged asserted signal.
+The [OpenBouffalo forwarding driver](https://github.com/openbouffalo/linux/blob/1f8731ea052cf874984510e1997b2015538b4328/drivers/irqchip/irq-bflb-mcu.c)
+describes the same signal-transition and unmask behavior.
+
+### New-event loss from a second clear
+
+The diagnostic injected a new SDH event after child handling. With
+mask/ack/child/unmask, MCU bit 17 remained set and the new event was
+dispatchable. Adding another MCU clear in the parent handler erased that
+new latch while the SDH event was still pending. A remaining PLIC
+notification could not recover the child identity once MCU status was zero.
+
+The tested Linux irqchip leaves mask/ack/unmask to the child level handler
+and performs no additional parent clear. Its demultiplexer examines both
+status banks, including latched bits whose sources are currently masked.
+Mask state alone does not establish that a pending latch has been handled.
+
+### Startup latches and Linux verification
+
+The forwarding block has two 32-bit banks. In the recorded Linux startup,
+inherited word-0 status included `0x00200400`, outside SDH source 17.
+Masking without clearing those existing latches still allowed the parent
+IRQ to reach 100,000 reports and be disabled before SDH registered.
+Initializing both banks with masks and W1C clears removed that reproduced
+startup storm. This initializes the D0 forwarding latches; it does not
+clear the originating peripherals' own status registers.
+
+With that initialization in Linux itself, repeated card reads advanced both
+parent and child IRQ counters without IRQ disabling. The
+[native Linux storage observation](/references/observations/#native-linux-sdh)
+records the counts and write/readback checks. Those failed startup runs
+could still return correct file CRCs through Linux spurious-IRQ recovery
+polling, so successful data reads alone were insufficient evidence of native
+IRQ delivery.
+
 ## Registers
 
 <RegisterIndex ids={["m0ic-status0", "m0ic-status1", "m0ic-mask0", "m0ic-mask1", "m0ic-clear0", "m0ic-clear1"]} />

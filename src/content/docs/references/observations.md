@@ -17,6 +17,8 @@ applies to the boot configuration and operation recorded for that session.
 | 2026-10-21 | M1s Dock, firmware `2f31e1c`, OpenSBI `6ad246a1` with UART changes and U-Boot `62c9805d` with board/UART changes | A recorded power-on boot and a recorded board-RESET boot produced matching selected clock, UART and PLIC readbacks at the U-Boot prompt |
 | 2026-10-21 | Same S-mode U-Boot build | Reads at `0xe400bff8`, `0xe0002100` and `0xe0002108` raised load access faults; U-Boot's reset path required a physical board RESET |
 | 2026-10-22 | M1s Dock, S-mode U-Boot `2026.10-g62c9805d8d57-dirty`, 2 Mbps console | After CPU_RTC initialization, `loads` received 1 KiB into PSRAM; PC and RAM CRC32 both read `b70b4c26`; the original RTC control word was restored and the prompt remained responsive |
+| 2026-10-23 | M1s Dock, RAM S-mode diagnostic, OpenSBI `6ad246a1`, U-Boot base `62c9805d` | Actual UART3 RX reached PLIC 20; SDH reached PLIC 81; priority arbitration, forwarding-latch behavior, RTC divider/reset and SDH peripheral reset were exercised |
+| 2026-10-23 | M1s Dock, RAM Linux `7.3.0-ga804c5742bff-dirty` with local SDH/IRQ/clock drivers, initramfs | Native parent/child IRQ progress, PIO and SDMA pattern writes, independent reads and original/neighbor restoration passed; both 96 MHz and 95 MHz SDH parents were used |
 
 ## Power-on and board-RESET readbacks
 
@@ -95,15 +97,71 @@ software-reboot sequence. The [NOR chapter](/storage/flash/) gives the physical
 offsets and the [SD chapter](/storage/sd-card/#recorded-file-reads) records the
 separate card-read sessions.
 
+## Native Linux SDH
+
+The 2026-10-23 follow-up used RAM-loaded U-Boot, Linux and a device tree.
+Linux reported `7.3.0-ga804c5742bff-dirty #18`, with local forwarding-IRQ,
+SDH and read-only PLL providers. The initramfs root and SBI `hvc0` console
+kept the SD filesystem unmounted and did not exercise a native Linux UART
+driver. Linux initialized both forwarding banks itself; these successful
+runs did not depend on a bootloader clearing the latches first.
+
+Five fresh 4 KiB reads and the preserved file CRCs accompanied the following
+interrupt counts:
+
+| SDH parent | PLIC 81 parent count | MCU 17 child count | Card clock reported by software |
+| --- | --- | --- | --- |
+| 96 MHz | 363 → 952 | 362 → 951 | 3,000,000 Hz |
+| 95 MHz | 78 → 667 | 77 → 666 | 2,968,750 Hz |
+
+No IRQ disabling, Oops or panic was reported in those checks. Failed earlier
+initialization variants could still read correct data through spurious-IRQ
+recovery polling; the successful checks therefore required native IRQ
+counter progress as well as matching data.
+
+The [PIO and SDMA tests](/storage/sd-card/#native-linux-pio-and-sdma) wrote
+only known `testfile` data at LBA 32833 through 32840. Guard blocks were
+32832 and 32841. Each length of 1, 3 and 8 blocks was restored and checked.
+For SDMA, a separately reprobed PIO host read each pattern before restoring
+the original bytes with PIO. The eight-block original SHA-256 remained:
+
+```text
+d956e40fda74c92b4219b67ec4f322685a73bde8afe2586ee6d5992047ab11a8
+```
+
+After the write tests, Linux and the unchanged installed U-Boot both
+returned the original `testfile` and `hello.txt` CRCs. Selected shared PLL
+and USB register words matched their saved values, and native M0 USB
+continued to answer. The installed NOR and FAT boot files were not replaced;
+31 saved M0/D0 source and firmware-artifact hashes matched their baseline.
+
+### Recorded image identity
+
+The reference compressed Linux image was 5,243,771 bytes with SHA-256:
+
+```text
+3ce8e4c163cb7d9ee28efc70d98ea3641bb01a2f69a132f545dd9a27dcf13c8f
+```
+
+Its source base was Linux `a804c5742bff224d4cb4d25dd383554d598be32b`
+with the local drivers described above. The RAM U-Boot base was
+`62c9805d8d57cad407f0295879cc9a6182da464a`; these base revisions alone
+do not identify the local changes. The final S-mode diagnostic binary had
+SHA-256 `82ca4dba4511d7f78646e9ef246de804e4f29fcaf310af55e0f26e9d50cfa08b`.
+
 ## Interpreting the results
 
-The [RTC observation](/clocks/rtc/#observed-enable-behavior) establishes that
-the counter advanced after its clock configuration changed. Its absolute
-frequency was not independently measured in that experiment.
+The [initial RTC observation](/clocks/rtc/#observed-enable-behavior) establishes
+that the counter advanced after its clock configuration changed. The
+[2026-10-23 follow-up](/clocks/rtc/#divider-and-reset-follow-up) adds measured
+cycle/TIME ratios and approximate host calibration. Neither is a clock-pin
+waveform measurement.
 
 The [SDH observation](/interrupts/m0ic/#sdh-delivery-path) establishes one
-peripheral route through the forwarding controller and PLIC. Polling UART
-output exercises a separate path.
+peripheral route through the forwarding controller and PLIC. The
+[native UART RX observation](/uart/overview/#observed-rx-interrupt-delivery)
+establishes source 20 separately. Polling UART output alone exercises
+neither of those interrupt paths.
 
 Logs, diagnostic sources, image hashes and the checking history are retained in
 the local laboratory archive. The [notation guide](/references/notation/)

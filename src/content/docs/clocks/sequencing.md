@@ -51,3 +51,16 @@ Changing the parent or divider of an active UART changes the relationship betwee
 ## Reset domains
 
 Chip, MCU, multimedia, peripheral and core resets have different scopes. A D0-core reset and a multimedia-peripheral reset affect different targets. Use the specific register control for the intended target rather than treating every reset as a complete return to the same chip state.
+
+### Observed SDH peripheral reset
+
+On 2026-10-23, a RAM diagnostic asserted and deasserted GLB
+`0x20000540` bit 22. The SDH argument, interrupt-enable and clock-control
+registers returned to zero after previously written test signatures.
+The checked SDH module/bus clock and UART controls retained their saved
+values, and the diagnostic returned to U-Boot with its writable
+configuration restored.
+
+This establishes the reset action on those controller registers in that
+board session. It does not establish a reset-domain inventory or the
+retention and synchronization behavior of every SDH or SoC register.
