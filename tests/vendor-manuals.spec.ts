@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test('English vendor manuals retain register tables and diagrams', async ({ page }) => {
-  await page.goto('/vendor/bl808/');
+  await page.goto('/');
+  await page.getByRole('link', { name: 'All vendor manuals →', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Datasheet 1.2 — English' })).toBeVisible();
   await page.getByRole('link', { name: 'Reference Manual 1.3 — English' }).click();
   await page.goto('/vendor/bl808/BL808_RM/en/content/SDH.html#clock-control');

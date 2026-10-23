@@ -45,8 +45,8 @@ access is never part of the documentation build.
 The complete official English Datasheet 1.2 and Reference Manual 1.3 are
 mirrored at [/vendor/bl808/](https://bl808-linux.github.io/vendor/bl808/).
 They retain the vendor's HTML, register tables, diagrams, attribution and
-Sphinx search, and remain separate from the edited reference navigation and
-Pagefind search. Chinese editions are not included.
+Sphinx search. The home page and sidebar link to the manuals; their contents
+remain separate from the edited reference chapters and Pagefind search. Chinese editions are not included.
 
 `public/vendor/bl808/manifest.json` pins the official repository revision,
 source PDF identities and per-file source/published SHA-256 hashes. HTML-only

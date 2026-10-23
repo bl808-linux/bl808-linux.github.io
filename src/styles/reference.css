@@ -77,6 +77,9 @@ body { font-feature-settings: 'ss01'; }
 .filter-count { color: var(--sl-color-gray-3); font-size: .75rem; }
 .eyebrow { color: var(--sl-color-accent-high); text-transform: uppercase; letter-spacing: .13em; font-size: .7rem; font-weight: 700; margin-bottom: .5rem; }
 .overview-lead { font-size: 1.2rem; color: var(--sl-color-gray-2); max-width: 54ch; line-height: 1.65; }
+.vendor-manuals { margin-block: 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--sl-color-accent); border-radius: .45rem; background: var(--sl-color-accent-low); }
+.vendor-manuals strong { display: block; color: var(--sl-color-white); font-size: .95rem; }
+.vendor-manuals p { margin: .45rem 0 0; font-size: .9rem; }
 .chapter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--ref-line); border: 1px solid var(--ref-line); border-radius: .45rem; overflow: hidden; margin-block: 2rem; }
 .chapter-grid a { display: block; padding: 1.35rem 1.45rem; background: var(--sl-color-black); text-decoration: none; }
 .chapter-grid a:hover { background: var(--ref-panel); }

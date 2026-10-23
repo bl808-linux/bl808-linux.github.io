@@ -8,6 +8,11 @@ description: "Clock, interrupt and address-space reference for BL808 software de
 
 This reference describes the BL808 interfaces used to bring up firmware and operating systems. Start with a subsystem's functional description, then follow its register entries. Board observations identify the Sipeed M1s Dock and the software context in which they were recorded.
 
+<aside class="vendor-manuals" aria-label="Official vendor manuals">
+<strong>Official Bouffalo Lab manuals (English)</strong>
+<p><a href="/vendor/bl808/BL808_DS/en/">Datasheet 1.2</a> · <a href="/vendor/bl808/BL808_RM/en/">Reference Manual 1.3</a> · <a href="/vendor/bl808/">All vendor manuals →</a></p>
+</aside>
+
 <div class="chapter-grid">
 <a href="/clocks/overview/"><small>01 / SYSTEM CONTROL</small><strong>Clocks &amp; reset →</strong><span>Trace sources, selectors, dividers and gates through to the CPU, timer and UART.</span></a>
 <a href="/interrupts/overview/"><small>02 / INTERRUPT DELIVERY</small><strong>Interrupts →</strong><span>Follow local timer events and peripheral requests through their different delivery paths.</span></a>

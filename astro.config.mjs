@@ -14,6 +14,7 @@ export default defineConfig({
     tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
     sidebar: [
       { label: 'Overview', slug: '' },
+      { label: 'Official vendor manuals', link: '/vendor/bl808/' },
       { label: 'Address space', items: [
         { label: 'Memory map', slug: 'address-space/memory-map' },
         { label: 'Core views & aliases', slug: 'address-space/core-views' },
