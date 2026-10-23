@@ -65,10 +65,48 @@ This path goes directly to the PLIC; it does not use the MCU forwarding
 controller exercised by SDH. Simultaneous UART/SDH tests also confirmed
 [PLIC priority arbitration](/interrupts/plic/#observed-priority-arbitration).
 
-These are native UART RX routing tests. The Linux shell in the storage
-experiments used the polling SBI `hvc0` console. Native Linux UART-driver
-RX/TX interrupt operation and UART TX-interrupt behavior were not validated
-by these tests.
+These diagnostic RX tests establish the peripheral route. The earlier
+Linux storage sessions used SBI `hvc0`; the separate native Linux UART
+follow-up below exercises the UART driver itself.
+
+## Native Linux RX/TX and reopen
+
+The 2026-10-23 follow-up used a local `bflb,uart` driver on current Linux
+base `a804c5742bff224d4cb4d25dd383554d598be32b`. The RAM DT supplied
+firmware-handoff fixed APB and baud clocks and PLIC source 20. Native
+`/dev/ttyS3` RX and userspace TX advanced the driver's counters. A separate
+boot used `console=ttynull` with a userspace shell on `ttyS3`, allowing real
+last-close shutdown and reopen checks without an attached kernel console.
+
+| Check | Recorded result |
+| --- | --- |
+| Paced binary RX and userspace TX | 63 comparisons across 115200, 1 Mbps and 2 Mbps passed |
+| Payload coverage | 21 lengths per rate, 1 to 32,768 bytes, including FIFO boundaries; 55,759 bytes in each direction per rate |
+| Drain, idle and resume | `tcdrain` completed; IRQ counters stayed unchanged during each two-second idle interval and input resumed |
+| Actual last close/open | 100 cycles passed; the UART IRQ disappeared while closed and I/O worked after reopen |
+
+Host-to-board RX used 16-byte bursts separated by 1 ms. Board-to-host TX
+had no host pacing. RX/TX counters advanced from 1,236/2,757 to
+168,619/176,000 with zero recorded parity, framing, hardware-overrun and
+software-buffer-overrun counts in the paced lifecycle run. Successful
+paced reception does not establish continuous reception at the selected
+baud rate.
+
+### Continuous RX limit
+
+An unpaced 1 Mbps RX test failed on a 255-byte payload: only 102 bytes were
+received and the data comparison failed. The hardware FIFO-overrun counter
+increased to one; parity and software-buffer-overrun counts stayed zero.
+Continuous high-speed RX acceptance therefore remains incomplete. Resolving
+SDH CMD8 does not resolve this UART limitation.
+
+The initial support and validation cover two-wire BL808 UART3 only. Real
+clock/reset-provider integration, injected parity/framing/break errors,
+hardware flow control, DMA, runtime module loading and other SoCs were not
+validated. Built-in-console and module builds, binding/example checks and
+strict checkpatch passed, but a module build is not a module-loading test.
+The [board observation](/references/observations/#native-linux-uart)
+records the image and driver identities.
 
 ## Console initialization
 

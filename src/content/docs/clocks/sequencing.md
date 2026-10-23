@@ -48,6 +48,39 @@ The current console setup disables the MM UART source-divider path, selects XTAL
 
 Changing the parent or divider of an active UART changes the relationship between its programmed bit period and the serial line. Clock setup, peripheral setup and pad routing must be read as one sequence.
 
+## SDH initialization clocks
+
+The M1s Dock follow-up requires an explicit initialization-clock sequence
+before the first CMD0/CMD8 pair. The SDK names the generator controls
+`GEN_PAD_CLK_CNT` (bits 31:24) and `GEN_PAD_CLK_ON` (bit 6) at SDH offset
+`0x100`. Miscellaneous completion at offset `0x10e` has a status-enable bit
+and a W1C completion bit. These vendor extensions are defined in the
+[pinned Bouffalo SDK header](https://github.com/bouffalolab/bl_iot_sdk/blob/edcf613f073d3ef7d2f290d7c285b69be35da75b/components/platform/soc/bl808/bl808_std/BL808_BSP_Driver/Peripherals/sdh_reg.h);
+the standard SDHCI register descriptions alone do not supply these fields.
+
+After the host clock, voltage and pad setup:
+
+1. Mask the miscellaneous interrupt signal while polling, enable its status
+   and acknowledge stale completion.
+2. Program a count of 80 and start the pad-clock generator.
+3. Wait for fresh completion with a bounded timeout, acknowledge it and
+   restore the saved miscellaneous controls.
+4. Send CMD0, then CMD8 with argument `0x1aa`.
+
+The tested Linux change runs the generator on `MMC_POWER_UP` to
+`MMC_POWER_ON` through the existing `platform_send_init_74_clocks` hook.
+The upstream
+[PXAv3 driver](https://github.com/torvalds/linux/blob/a804c5742bff224d4cb4d25dd383554d598be32b/drivers/mmc/host/sdhci-pxav3.c)
+also uses that hook for an explicit 74-clock initialization operation; that
+is a software precedent, not proof of identical BL808 silicon internals.
+
+The [controlled CMD8 comparison](/storage/sd-card/#initial-clocks-and-first-cmd8)
+records 1-clock and no-trigger failures, 74/80-clock successes and native
+Linux verification. These are programmed counts and controller completion
+observations, rather than measured socket waveforms. Clock-enable readback
+and elapsed software delay alone did not establish initialization clocks
+under the tested warm-POR conditions.
+
 ## Reset domains
 
 Chip, MCU, multimedia, peripheral and core resets have different scopes. A D0-core reset and a multimedia-peripheral reset affect different targets. Use the specific register control for the intended target rather than treating every reset as a complete return to the same chip state.

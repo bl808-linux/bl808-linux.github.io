@@ -19,6 +19,8 @@ applies to the boot configuration and operation recorded for that session.
 | 2026-10-22 | M1s Dock, S-mode U-Boot `2026.10-g62c9805d8d57-dirty`, 2 Mbps console | After CPU_RTC initialization, `loads` received 1 KiB into PSRAM; PC and RAM CRC32 both read `b70b4c26`; the original RTC control word was restored and the prompt remained responsive |
 | 2026-10-23 | M1s Dock, RAM S-mode diagnostic, OpenSBI `6ad246a1`, U-Boot base `62c9805d` | Actual UART3 RX reached PLIC 20; SDH reached PLIC 81; priority arbitration, forwarding-latch behavior, RTC divider/reset and SDH peripheral reset were exercised |
 | 2026-10-23 | M1s Dock, RAM Linux `7.3.0-ga804c5742bff-dirty` with local SDH/IRQ/clock drivers, initramfs | Native parent/child IRQ progress, PIO and SDMA pattern writes, independent reads and original/neighbor restoration passed; both 96 MHz and 95 MHz SDH parents were used |
+| 2026-10-23 | M1s Dock, current Linux `a804c574`, local native UART driver and RAM-only fixed-clock DT | Paced RX/TX comparisons at three baud rates and 100 actual last-close/open cycles passed; unpaced 1 Mbps RX exposed a hardware FIFO overrun |
+| 2026-10-23 | M1s Dock, powered card, warm-POR command probe and native Linux SDH comparison | Explicit initialization-clock generation changed first-CMD8 success from 0/7 to 7/7; native Linux first CMD8 and five re-probes succeeded after the change |
 
 ## Power-on and board-RESET readbacks
 
@@ -148,6 +150,74 @@ with the local drivers described above. The RAM U-Boot base was
 `62c9805d8d57cad407f0295879cc9a6182da464a`; these base revisions alone
 do not identify the local changes. The final S-mode diagnostic binary had
 SHA-256 `82ca4dba4511d7f78646e9ef246de804e4f29fcaf310af55e0f26e9d50cfa08b`.
+
+## SDH initialization-clock follow-up
+
+The later 2026-10-23 comparison isolated the missing initialization-clock
+operation. [The SD chapter](/storage/sd-card/#initial-clocks-and-first-cmd8)
+gives every control condition and the first-attempt counts. Its native Linux
+control and fixed diagnostic images use the same current Linux base and
+platform support; the fixed image adds initialization-clock generation.
+
+| Native Linux observation | Before initialization-clock change | After change |
+| --- | --- | --- |
+| First CMD8 | Status `0x00018000`, no response | Status `0x00000001`, R7 `0x000001aa` |
+| Later card discovery | Succeeded after later identification commands | Succeeded from the first CMD8 |
+| Five fresh block reads and file CRCs | Matched | Matched |
+| First CMD8 after native driver re-probe | Not tested in this control | Five of five re-probes succeeded |
+
+In the fixed native read check, PLIC 81 increased 299 → 881 and MCU 17
+increased 298 → 880. SD write counters stayed zero, and no kernel crash or
+IRQ disabling was reported. All five persistent SD files matched their saved
+sizes/CRCs when the board returned to the earlier native `ttyS3` RAM shell.
+All 1,728 saved firmware/build baseline hashes remained unchanged.
+
+The native diagnostic image identities are:
+
+Control image: 5,245,959 bytes, SHA-256:
+
+```text
+da5d7d536dbb8057ff460c28bab5022c6bac0b8bd7b42f05ed4d9e8314acd2da
+```
+
+Fixed image with temporary command logging: 5,245,948 bytes, SHA-256:
+
+```text
+f45cdcb68ecffa1450d4b6f31e5237a17e592e36b44eb7a01d334398675902c5
+```
+
+The clean SDH glue source SHA-256 is
+`39d9d3e9a87864af80875de0279a1486d88093fb411f93974a16d329fa65e82e`.
+Diagnostic logging and SD-only probe restrictions are excluded from that
+source change. The clean image also builds with `W=1`; the runtime
+first-command evidence above comes from the diagnostic image. Physical cold
+power-up, another card and socket waveforms remain separate checks. This
+result addresses the tested CMD8 obstacle, not complete platform acceptance.
+
+## Native Linux UART
+
+A separate native UART session used the current Linux base, a local
+`bflb,uart` driver, PLIC source 20 and fixed clocks describing the firmware
+handoff. Linux `ttyS3` supplied the console; the `hvc0` device was excluded
+from that test kernel. Its compressed image was 5,038,195 bytes, SHA-256:
+
+```text
+e0873278bb0ba90294b46a356bedd1ee27f5d21d2ed5cf98f95dee23f682d47a
+```
+
+The driver source SHA-256 was
+`0388179b65ccfb9c94e72c3c0733df5a527dbe448d2e082c46bc6a20af880c76`.
+The [UART chapter](/uart/overview/#native-linux-rxtx-and-reopen) records
+paced binary transfers at three rates, userspace TX, idle/resume and 100
+actual last-close/open cycles. Those lifecycle tests used `console=ttynull`
+with the shell on native `ttyS3`; an attached kernel console would prevent
+the intended last-close shutdown.
+
+The [unpaced RX failure](/uart/overview/#continuous-rx-limit) remains a
+verified limitation: at 1 Mbps, a 255-byte transfer returned 102 bytes with
+a hardware FIFO overrun. Successful paced tests and builds do not establish
+continuous high-speed RX acceptance or upstream readiness. The test images
+were RAM-only and the existing persistent boot files were preserved.
 
 ## Interpreting the results
 

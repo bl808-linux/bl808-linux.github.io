@@ -35,7 +35,7 @@ body { font-feature-settings: 'ss01'; }
 .sl-markdown-content table { font-size: .88rem; width: 100%; display: table; }
 .sl-markdown-content th { background: var(--ref-panel); font-size: .76rem; font-weight: 680; text-align: left; letter-spacing: .025em; }
 .sl-markdown-content td, .sl-markdown-content th { padding: .7rem .85rem; vertical-align: top; border-bottom: 1px solid var(--ref-line); }
-.sl-markdown-content code:not(pre code) { font-size: .84em; border-radius: .2rem; }
+.sl-markdown-content code:not(pre code) { font-size: .84em; border-radius: .2rem; overflow-wrap: anywhere; }
 .table-scroll { max-width: 100%; overflow-x: auto; margin-block: 1.2rem; }
 .table-scroll:focus-visible, .bit-scroll:focus-visible { outline: 2px solid var(--sl-color-accent); outline-offset: 3px; }
 .register { margin-block: 2.4rem 3.4rem; scroll-margin-top: 6rem; border: 1px solid var(--ref-line); border-radius: .55rem; overflow: hidden; }

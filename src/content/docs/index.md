@@ -21,6 +21,8 @@ This reference describes the BL808 interfaces used to bring up firmware and oper
 <a href="/storage/overview/"><small>05 / BOOT &amp; STORAGE</small><strong>Flash &amp; SD →</strong><span>Keep OpenSBI and U-Boot in NOR, Linux on SD, and execution buffers in RAM.</span></a>
 </div>
 
+Latest board verification: [SDH initial clocks and first CMD8](/storage/sd-card/#initial-clocks-and-first-cmd8), and [native Linux UART RX/TX, reopen and receive limits](/uart/overview/#native-linux-rxtx-and-reopen). See [Board observations](/references/observations/) for the recorded software and image identities.
+
 ## The system at a glance
 
 | Block | Interface | Role |

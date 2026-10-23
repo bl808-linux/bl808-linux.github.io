@@ -53,6 +53,55 @@ as SD High Speed 50 MHz; the controller source/divider settings corresponded
 to a nominal 48 MHz bus. The later native Linux tests below used a one-bit
 bus at substantially lower register-derived card clocks.
 
+## Initial clocks and first CMD8
+
+The 2026-10-23 warm-POR tests identified a missing initialization-clock
+operation in the local SDH glue. Enabling SDCLK and waiting 10 ms did not
+establish a successful first CMD8. Explicitly starting the vendor pad-clock
+generator and waiting for fresh completion did. The card remained powered
+between trials; no U-Boot MMC command preceded the probe after each POR.
+
+| Initialization at the same requested card clock | First CMD8 successes |
+| --- | --- |
+| Previous sequence, 100 kHz | 0/2 |
+| Generate 80 initialization clocks, 100 kHz | 2/2 |
+| Previous sequence, 400 kHz | 0/5 |
+| Generate 80 initialization clocks, 400 kHz | 5/5 |
+| Configure the generator but do not start it, 400 kHz | 0/1 |
+| Generate 1 initialization clock, 400 kHz | 0/1 |
+| Generate 74 initialization clocks, 400 kHz | 1/1 |
+
+Negative first attempts reported combined SDH status `0x00018000`: command
+timeout plus error summary. Successful first attempts reported fresh
+command-complete status `0x00000001` and R7 `0x000001aa`. A response-less
+CMD0 completion does not show that the card received a valid reset command.
+
+Earlier tests increased software delays up to 1 s and lowered the programmed
+card clock from 400 kHz to 10 kHz without fixing the first CMD8. Those tests
+checked divider readbacks and command-time scaling; they did not measure
+idle clocks at the socket. The generator-trigger and count controls above
+separate the effective initialization operation from extra waiting or
+register setup alone. They do not establish the exact success threshold
+between 1 and 74 clocks.
+
+A separate native Linux comparison used the current base
+`a804c5742bff224d4cb4d25dd383554d598be32b`, local platform drivers and a RAM
+initramfs. The diagnostic DT disabled SDIO/MMC probing so CMD8 was the first
+response-bearing identification command. Before the change, the first CMD8
+timed out and two later CMD8 requests succeeded; the card still registered.
+After adding 80-clock generation through SDHCI's
+`platform_send_init_74_clocks` hook, the first CMD8 succeeded. Five native
+unbind/bind cycles also succeeded on their first CMD8.
+
+Fresh file and block reads matched, parent/child IRQ counts advanced and SD
+write counters remained zero. The diagnostic logging and SD-only DT
+restrictions were excluded from the driver change. The
+[board observation](/references/observations/#sdh-initialization-clock-follow-up)
+records image identities and the read-verification counts; the
+[initialization sequence](/clocks/sequencing/#sdh-initialization-clocks)
+identifies the vendor controls. Physical cold power-up, another card and
+socket CMD/CLK waveforms remain unmeasured in this comparison.
+
 ## Polling and interrupt delivery
 
 The U-Boot MMC stack used polling for card commands and file reads. A separate
