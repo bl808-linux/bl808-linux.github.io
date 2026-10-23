@@ -14,7 +14,7 @@ const errors = [];
 let checked = 0;
 for (const [file, html] of contents) {
   const relative = path.relative(root, file);
-  const pageURL = new URL(relative.replace(/index\.html$/, ''), 'https://bl808-linux.github.io/');
+  const pageURL = new URL(relative.replace(/(^|\/)index\.html$/, '$1'), 'https://bl808-linux.github.io/');
   for (const tag of html.matchAll(/<(?:a|link|script|img|source)\b[^>]*>/g)) {
     if (/\brel="canonical"/.test(tag[0])) continue;
     const match = tag[0].match(/\b(?:href|src)="([^"]+)"/);

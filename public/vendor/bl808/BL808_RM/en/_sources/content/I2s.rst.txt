@@ -1,0 +1,121 @@
+==========
+I2S
+==========
+
+Overview
+=====
+InterIC Sound (I2S), also Integrated Interchip Sound (IIS), is a digital audio transmission specification defined by Philips in 1986 (revised in 1996) for transmitting digital audio data between internal devices of a system.
+I2S is a simple digital interface protocol with no address or device selection mechanism and supports full-duplex peer-to-peer transmission. In the I2S bus, the device providing the clock (BCLK and FS) is the master device.
+In most scenarios, there is a master device and a slave device on the I2S bus for unidirectional or bidirectional data transmission. However, in some special scenarios, only one master can provide the clock to control the data transmission between two slaves, which can precisely control the data flow.
+
+The integrated I2S module of the chip is also compatible with the PCM/TDM format. Compared with I2S, which can only transmit two-channel audio data, the PCM/TDM interface expands the number of transmission channels through Time Division Multiplexing. The main difference between PCM/TDM and I2S lies in the position, length and frame length of the frame clock, and I2S can be considered as a special case of the PCM/TDM interface. However, PCM/TDM does not have a completely unified application standard, and different manufacturers may have slightly different applications.
+
+Features
+=========
+
+- Supports master and slave modes
+- Supported I2S protocol
+
+    - Normal I2S (Philips format)
+    - Left-Justified 
+    - Right-Justified 
+    - The channel slot and effective data width support 8/16/24/32 bits respectively, and the effective data width cannot be greater than the channel width
+
+- Support PCM/TDM format, frame clock position and frame length can be adjusted flexibly, support up to 6 channels, compatible with most common modes
+
+    - Support 2-channel, 3-channel, 4-channel and 6-channel modes, channel slot supports 8/16/24/32 bits
+    - PCM/TDM Mode A, after the data is valid at FS, the second rising edge of BCLK is valid
+    - PCM/TDM Mode B, after the data is valid at FS, the first rising edge of BCLK is valid
+    - Long Frame Sync, long frame sync mode, FS pulse width is equal to the length of 1 Slot
+    - Short Frame Sync, short frame sync mode, FS pulse width is equal to 1 BCLK cycle length
+
+- Support 8/11.025/16/22.05/32/44.1/48/96/192 KHz sampling rate, and can achieve finer control by configuring clock source and frequency division coefficient
+- Support playback of monaural audio copied to dual-channel mode
+- Support merging of two-channel recording data below 8/16bits to improve FIFO usage efficiency
+- Support dynamic mute switching function
+- Support data MSB/LSB switching
+- Support to directly output the clock source, which can be used as MCLK, or output MCLK with the CLK_OUT function of GLB
+- Support output signal polarity inversion
+- Support DMA transfer mode
+- The data transmit/receive FIFO has a width of 32 bits and a depth of 16
+
+Functional Description
+===========
+Data formats
+-------------
+The signal timing format of the I2S module is highly flexible and configurable, including the mode of the FS signal, the offset from the FS signal to valid data, the slot width and the valid data width, and is compatible with most common formats.
+The I2S protocol is a two-channel mode, the FS signal length is equal to a slot, and the effective data length is less than or equal to the slot length. Among them, the valid data in the Normal format is left-aligned and will be offset by one bit relative to the FS signal.
+Therefore, set the cr_fs_ch_cnt section of the i2s_config register to be dual-channel, set the FS signal length of the cr_fs_1t_mode section to be equal to Solt, set the cr_i2s_mode section to be data left-aligned, and set the cr_ofs_en and cr_ofs_cnt sections to be one-bit data offset, and the I2S protocol Normal format can be obtained. As shown below.
+
+.. figure:: ../../picture/I2sNormal.svg
+   :align: center
+
+   Normal I2S
+
+The left-justified format of the I2S protocol is similar to the Normal format, but there is no data offset. Valid data in the right-aligned format will be aligned to the right within the slot.
+Therefore, on the basis of the Normal format, set the cr_ofs_en section of the i2s_config register to close the data offset to obtain the Left-Justified format, and then set the cr_i2s_mode section to right-align the data to obtain the Right-Justified format, as shown in the figure below.
+
+.. figure:: ../../picture/I2sLeftRight.svg
+   :align: center
+
+   I2S LeftJustified/RightJustified
+
+The configuration of PCM/TDM mode is more flexible. Set the cr_i2s_mode section of the i2s_config register to 2, that is, PCM/TDM mode, set the cr_fs_ch_cnt section to select the number of channels, and set the cr_fs_1t_mode section to select long frame synchronization (FS signal length equal to Slot) or short frame synchronization (FS signal length is one BCLK cycle) mode, set cr_ofs_en section and cr_ofs_cnt section to select data offset, generally define Mode A offset by 1 bit, Mode B has no offset, but the definitions of different manufacturers may be different. The figure below shows the timing of Mode B in Long/Short Frame Sync, shifting the data to the right by one bit is the timing of Mode A.
+
+.. figure:: ../../picture/I2sPcmTdm.svg
+   :align: center
+
+   PCM/TDM mode
+
+I2S single channel mode
+-------------
+Usually I2S uses two-channel transmission, but there will be a waste of resources when using a single-channel device. After configuring the cr_mono_mode section of the i2s_config register as Mono mode, the mono mode will be used. It should be noted that both sending and receiving will use mono mode.
+At this time, the data in the TX FIFO will be placed in the left and right channels at the same time, and the data received by the left channel or the right channel can be selected through the cr_mono_rx_ch segment of the i2s_config register.
+
+Data MSB/LSB justification
+------------------
+Usually I2S uses MSB format to transmit data, but some modes of some manufacturers' devices may use LSB format to transmit, and the format can be adjusted through the cr_endian bit of the i2s_config register.
+
+Binaural data merge and exchange
+------------------
+When using the 8/16bit valid data of the I2S protocol, in order to increase the utilization efficiency of the FIFO, the dual-channel data can be merged through the cr_fifo_lr_merge section of the i2s_fifo_config_0 register. At this time, each data in the FIFO contains both left and right channel data. [0:15] is the left channel at 16bit, [16:31] is the right channel, [0:7] is the left channel at 8bit, and [8:15] is the right channel. At this time, the data width in DMA mode also needs to be adjusted accordingly.
+In merge mode, the left and right channel output can be exchanged by controlling the cr_fifo_lr_exchg bit of the i2s_fifo_config_0 register.
+
+Silent mode
+----------
+In some scenarios, it is necessary to pause the playback, but to keep the playback progress continuously changing, the silent mode can meet this requirement. Enter the mute mode through the cr_mute_mode of the i2s_config register. During the mute period, the data transmission speed in the TX FIFO remains unchanged, but the sent data will be forced to remain as the last data before each channel is muted.
+
+Clock source
+-------------
+The clock source of I2S is provided by audio PLL, and the clock divider is used to divide the clock source and then generate the clock signal to drive I2S, as shown below:
+
+.. figure:: ../../picture/I2SClk.svg
+   :align: center
+
+   I2S clock
+
+I2S Interrupt
+-------------
+I2S supports the following interrupt control modes:
+
+- TX FIFO request interrupt
+
+  * A TX FIFO request interrupt will be generated when TX_FIFO_CNT in I2S_FIFO_CONFIG_1 is greater than TX_FIFO_TH. When the condition is not met, the interrupt flag will be cleared automatically
+
+- RX FIFO request interrupt
+
+  * A RX FIFO request interrupt will be generated when RX_FIFO_CNT in I2S_FIFO_CONFIG_1 is greater than RX_FIFO_TH. When the condition is not met, the interrupt flag will be cleared automatically
+
+- Overrun/undderun error interrupt
+
+  * If the TX/RX FIFO overflows or underflows, it will trigger the error interrupt. When the error disappears, the flag bit will be cleared automatically
+
+All the interrupt enable bits and interrupt flag bits of I2S are in the I2S_INT_STS register.
+
+.. only:: html
+
+   .. include:: i2s_register.rst
+
+.. raw:: latex
+
+   \input{../../en/content/i2s}

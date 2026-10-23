@@ -39,3 +39,31 @@ repository setting. Do not publish the repository root as the site.
 
 Pull requests run the build and browser checks without deploying. Hardware
 access is never part of the documentation build.
+
+## Original English vendor manuals
+
+The complete official English Datasheet 1.2 and Reference Manual 1.3 are
+mirrored at [/vendor/bl808/](https://bl808-linux.github.io/vendor/bl808/).
+They retain the vendor's HTML, register tables, diagrams, attribution and
+Sphinx search, and remain separate from the edited reference navigation and
+Pagefind search. Chinese editions are not included.
+
+`public/vendor/bl808/manifest.json` pins the official repository revision,
+source PDF identities and per-file source/published SHA-256 hashes. HTML-only
+normalizations remove references to an upstream-missing stylesheet and
+unresolved Sphinx diagnostic hyperlinks (their text is preserved), and exclude
+the archive from Pagefind. The link checker handles `genindex.html` as an
+ordinary page rather than mistaking it for a directory index.
+
+To refresh from a local clone of `https://github.com/bouffalolab/bl_docs`:
+
+```sh
+python3 scripts/import-vendor-docs.py --source /path/to/bl_docs
+npm run check
+npm run build
+npm test
+```
+
+The checked-in mirror builds without a documentation checkout or PDF converter.
+This archive reproduces vendor documentation; it does not extend the site's
+board-validation claims.
