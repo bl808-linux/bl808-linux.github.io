@@ -17,10 +17,18 @@ first with `npx playwright install chromium`.
 
 Pages live in `src/content/docs`. Register data lives in `src/data/registers.json`;
 the shared register component renders metadata, bit diagrams and field tables.
-Only established definitions and verified behavior belong in this repository.
-Experimental notes, raw laboratory records and unresolved claims stay outside
-the published site. See Board observations and Reading the reference for
-measurement context and notation.
+Published hardware claims describe established definitions and verified behavior.
+Proposed installation layouts are explicitly labeled and kept distinct from
+observed board behavior. Experimental notes, raw laboratory records and unresolved
+hardware claims stay outside the published site. See Board observations and
+Reading the reference for measurement context and notation.
+
+Allocation diagrams use `src/data/allocations.ts`; proposed SD capacity examples
+are calculated by `src/data/sd-layout.ts`. These static data modules have no
+dependency on the imager/firmware checkouts and never access or repartition a
+card. When revising the SD policy, update the explanatory contract and capacity
+tests together. Kernel A/B shares a single Debian rootfs; it does not promise
+whole-system rollback.
 
 ## GitHub Pages deployment
 

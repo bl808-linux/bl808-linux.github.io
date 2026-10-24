@@ -3,6 +3,9 @@ title: "SPI NOR layout & updates"
 description: "M1s Dock boot-firmware offsets, erase units and the SRAM-resident M0 update path."
 ---
 
+import AllocationMap from '../../../components/AllocationMap.astro';
+import { flashMap } from '../../../data/allocations';
+
 The tested M1s Dock has a 16 MiB W25Q128 SPI NOR with JEDEC ID `ef4018`.
 The locations below are **physical Flash offsets**, with exclusive ends.
 They are the loader's board-specific storage contract, not CPU addresses.
@@ -12,6 +15,8 @@ boot chain contains OpenSBI and U-Boot, together with the M0/D0 startup firmware
 their metadata and the boot-firmware DTB.
 
 ## Boot-firmware placement
+
+<AllocationMap map={flashMap} />
 
 | Start | End, exclusive | Capacity | Contents |
 | --- | --- | --- | --- |

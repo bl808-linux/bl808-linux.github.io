@@ -1,0 +1,61 @@
+---
+import { capacity, hex, stateLabels, type AllocationMap } from '../data/allocations';
+
+interface Props { map: AllocationMap }
+const { map } = Astro.props;
+const entries = map.kind === 'range'
+  ? map.regions.map(region => ({ ...region, sizeLabel: capacity(region.end - region.start), addressLabel: `[${hex(region.start)}, ${hex(region.end)})` }))
+  : map.kind === 'markers'
+    ? map.markers.map(marker => ({ ...marker, sizeLabel: 'Load address', addressLabel: hex(marker.address) }))
+    : map.items.map(item => ({ ...item, sizeLabel: 'Proposed role', addressLabel: '' }));
+const entryId = (id: string) => `${map.id}-${id}`;
+const number = (index: number) => String(index + 1).padStart(2, '0');
+---
+<figure class="allocation-map" id={map.id} aria-labelledby={`${map.id}-title`}>
+  <figcaption>
+    <strong id={`${map.id}-title`}>{map.title}</strong>
+    <span class="allocation-note">{map.note}</span>
+  </figcaption>
+  {map.kind === 'range' && <>
+    <div class="allocation-scale"><span>{map.unit}</span><span>Proportional · {capacity(map.end - map.start)}</span></div>
+    <div class="allocation-track" data-start={map.start} data-end={map.end}>
+      {map.regions.map((region, index) => {
+        const percent = (region.end - region.start) / (map.end - map.start) * 100;
+        return <a class={`allocation-segment allocation-${region.state} ${region.role ? `allocation-role-${region.role}` : ''}`} href={`#${entryId(region.id)}`}
+          style={`width:${percent}%`} data-start={region.start} data-end={region.end}
+          aria-label={`${number(index)} ${region.label}, ${capacity(region.end - region.start)}. ${stateLabels[region.state]}`}
+          title={`${region.label} · ${capacity(region.end - region.start)}`} tabindex={percent < 3 ? -1 : 0}>
+          {percent >= 6 && <span>{number(index)}{percent >= 28 && <span class="allocation-bar-label"> {region.label}</span>}</span>}
+        </a>;
+      })}
+    </div>
+    <div class="allocation-endpoints"><code>{hex(map.start)}</code><code>{hex(map.end)} <span>(exclusive)</span></code></div>
+  </>}
+  {map.kind === 'markers' && <>
+    <div class="allocation-scale"><span>{map.unit}</span><span>Address markers · extent unspecified</span></div>
+    <div class="allocation-marker-track">
+      {map.markers.map((marker, index) => <a class="allocation-marker" href={`#${entryId(marker.id)}`}
+        style={`left:${(marker.address - map.start) / (map.end - map.start) * 100}%`}
+        aria-label={`${number(index)} ${marker.label}, ${hex(marker.address)}`}><span>{number(index)}</span></a>)}
+    </div>
+    <div class="allocation-endpoints"><code>{hex(map.start)}</code><code>{hex(map.end)} <span>(exclusive)</span></code></div>
+  </>}
+  {map.kind === 'logical' && <div class="allocation-logical" aria-label="Logical roles, not proportional">
+    {map.items.map((item, index) => <a class={item.role ? `allocation-role-${item.role}` : ''} href={`#${entryId(item.id)}`}><span>{number(index)} / PROPOSED</span><strong>{item.label}</strong></a>)}
+  </div>}
+  {map.kind === 'range' && <p class="allocation-rounding">≈ marks rounded sizes; address ranges are exact.</p>}
+  <ol class="allocation-legend">
+    {entries.map((entry, index) => <li id={entryId(entry.id)} tabindex="-1">
+      <div class="allocation-entry-title">
+        <span class={`allocation-key allocation-${entry.state} ${entry.role ? `allocation-role-${entry.role}` : ''}`}>{number(index)}</span>
+        <strong>{entry.label}</strong>
+        <span class="allocation-capacity">{entry.sizeLabel}</span>
+      </div>
+      <div class="allocation-entry-meta">
+        {entry.addressLabel && <code>{entry.addressLabel}</code>}
+        <span>{stateLabels[entry.state]}</span>
+      </div>
+      <p>{entry.description} <a href={entry.evidence.href}>{entry.evidence.label} →</a></p>
+    </li>)}
+  </ol>
+</figure>

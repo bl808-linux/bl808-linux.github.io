@@ -3,9 +3,37 @@ title: "Memory map"
 description: "BL808 control blocks, memories and board-specific address windows."
 ---
 
+import AllocationMap from '../../../components/AllocationMap.astro';
+import { sramMaps, psramMaps } from '../../../data/allocations';
+
 An address must be read together with its core view and mapping. Register blocks below are CPU addresses. SPI NOR placement is described separately as a physical storage offset.
 
+## System RAM allocation
+
+The M1s Dock SRAM boot path keeps **OpenSBI in 512 KiB of internal SRAM**.
+It does not carve an OpenSBI region out of the front of the 64 MiB external
+PSRAM bank. The diagrams show reservation or linker capacities, not live
+utilization. Each bank has its own scale; aliases are counted once.
+
+Select a numbered region for its exact range and role. Small regions remain
+listed in the legend even when their number cannot fit inside the bar.
+All address intervals below have exclusive ends.
+
+{sramMaps.map(map => <AllocationMap map={map} />)}
+
+## PSRAM through the boot stages
+
+The same PSRAM changes owners during boot. Initial copy addresses, a running
+U-Boot allocation snapshot, and the bank supplied to Linux are different views
+of those bytes. They must not be added together as permanent reservations.
+Kernel, initramfs and decompression sizes depend on the selected boot images;
+no fixed Linux sub-allocation is established here.
+
+{psramMaps.map(map => <AllocationMap map={map} />)}
+
 ## Control and peripheral regions
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="Control and peripheral regions">
 
 | Base | End, exclusive | Size | Block | Interface |
 | --- | --- | --- | --- | --- |
@@ -21,9 +49,13 @@ An address must be read together with its core view and mapping. Register blocks
 | `0xe0000000` | `0xe4000000` | 64 MiB | PLIC aperture | Source and context register windows |
 | `0xe4000000` | `0xe400c000` | 48 KiB | CLINT window used by the boot DT | Core-local software and timer registers |
 
+</div>
+
 The sizes are block windows, not counts of implemented registers. For example, the PLIC aperture contains widely separated context windows; it is not 64 MiB of RAM.
 
 ## On-chip memory and aliases
+
+<div class="table-scroll" tabindex="0" role="region" aria-label="On-chip memory and aliases">
 
 | CPU view | End, exclusive | Capacity | Memory | Alias of the same storage |
 | --- | --- | --- | --- | --- |
@@ -31,16 +63,22 @@ The sizes are block windows, not counts of implemented registers. For example, t
 | `0x3ef80000` | `0x3f000000` | 512 KiB | MM DRAM, on-chip SRAM | `0x7ef80000` |
 | `0x3f000000` | `0x3f008000` | 32 KiB | MM VRAM, on-chip SRAM | `0x7f000000` |
 
+</div>
+
 **MM DRAM** refers to internal SRAM. External PSRAM is a separate device. WRAM ownership and the shared-bank release controls affect its use; address aliases do not increase total capacity.
 
 See [core views and aliases](/address-space/core-views/) for cache and protection semantics.
 
 ## M1s Dock external memory
 
+<div class="table-scroll" tabindex="0" role="region" aria-label="External memory windows">
+
 | CPU address | End, exclusive | Capacity | Meaning |
 | --- | --- | --- | --- |
 | `0x50000000` | `0x54000000` | 64 MiB | Populated external PSRAM, after controller and PHY initialization |
 | `0x58000000` | `0x5c000000` | 64 MiB aperture | Primary XIP CPU window; the board's physical NOR is 16 MiB |
+
+</div>
 
 The address-space aperture and the fitted device capacity are different quantities. The linker, loader, device tree and operating system must agree on the actual allocation of those memories.
 

@@ -1,0 +1,38 @@
+---
+import { flashMap, sramMaps, capacity } from '../data/allocations';
+const firmwareBytes = flashMap.regions.filter(region => region.state === 'reserved').reduce((sum, region) => sum + region.end - region.start, 0);
+---
+<div class="allocation-overview" aria-label="System allocation overview">
+  <section class="allocation-overview-card">
+    <small>01 / INTERNAL SRAM</small>
+    <h3>Firmware stays here</h3>
+    {[sramMaps[1], sramMaps[0], sramMaps[2]].map(map => <div class="allocation-mini-row"><span>{map.id === 'mm-dram' ? 'MM DRAM · OpenSBI' : map.id === 'mcu-sram' ? 'MCU · M0 runtime + stack' : 'MM VRAM · D0 data + stack'}</span><strong>{capacity(map.regions.filter(region => region.state !== 'unknown').reduce((sum, region) => sum + region.end - region.start, 0))}</strong><div class="allocation-mini" aria-hidden="true">{map.regions.map(region => <span class={`allocation-${region.state}`} style={`width:${(region.end - region.start) / (map.end - map.start) * 100}%`}></span>)}</div></div>)}
+    <p>Separate bank scales: 512 / 224 / 32 KiB. M0 uses 32 KiB of the 224 KiB MCU view; other contents are not enumerated.</p>
+    <a href="/address-space/memory-map/#system-ram-allocation">SRAM reservations →</a>
+  </section>
+  <section class="allocation-overview-card">
+    <small>02 / EXTERNAL PSRAM</small>
+    <h3>64 MiB for execution</h3>
+    <div class="allocation-mini" aria-hidden="true"><span class="allocation-managed" style="width:100%"></span></div>
+    <p class="allocation-summary-role">U-Boot → kernel &amp; Linux working memory</p>
+    <p>Loading, decompression and runtime share the bank at different stages. OpenSBI resides in separate SRAM. Individual Linux allocations vary.</p>
+    <a href="/address-space/memory-map/#psram-through-the-boot-stages">Boot-stage allocation →</a>
+  </section>
+  <section class="allocation-overview-card">
+    <small>03 / SPI NOR FLASH</small>
+    <h3>16 MiB for board startup</h3>
+    <div class="allocation-mini" role="img" aria-label="Proportional firmware slot capacities and unassigned gaps across the 16 MiB NOR">
+      {flashMap.regions.map(region => <span class={`allocation-${region.state}`} style={`width:${(region.end - region.start) / (flashMap.end - flashMap.start) * 100}%`}></span>)}
+    </div>
+    <p class="allocation-summary-role">M0 / D0 · DTB · U-Boot · OpenSBI</p>
+    <p>{capacity(firmwareBytes)} of slot capacity; the rest is unassigned in this layout. Slot capacity differs from programmed image size.</p>
+    <a href="/storage/flash/#boot-firmware-placement">Physical NOR layout →</a>
+  </section>
+  <section class="allocation-overview-card">
+    <small>04 / SD CARD · PLANNED</small>
+    <h3>Operating-system installation</h3>
+    <div class="allocation-summary-plan"><span>BOOTCTRL</span><span>Linux A / B</span><span>Debian</span><span>RAW</span></div>
+    <p>Proposed GPT: 4 MiB control, 256 MiB per kernel slot, up to 16 GiB Debian rootfs, then RAW. A 128 GB example leaves about 102.7 GiB RAW.</p>
+    <a href="/storage/sd-card/#planned-sd-allocation">Planned SD roles →</a>
+  </section>
+</div>
