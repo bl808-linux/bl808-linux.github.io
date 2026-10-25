@@ -10,6 +10,12 @@ from **Linux on the SD card**. OpenSBI and U-Boot belong to the Flash boot chain
 the kernel, its device tree, initramfs and root filesystem belong to the SD
 installation. M0 and the small D0 loader also remain in NOR to start that chain.
 
+During [kernel development](/storage/ram-boot/), the PC can send the kernel,
+Linux DTB and initramfs directly to PSRAM through UART3. U-Boot then starts
+Linux from those buffers. This recorded RAM boot leaves the SD boot files
+and NOR firmware intact. The D0 console defaults to 115200 with a 40 MHz
+UART3 input clock; only the file-transfer phase temporarily uses 2 Mbps.
+
 ## System allocation at a glance
 
 RAM and NOR bars describe board-specific capacities and roles, not measured

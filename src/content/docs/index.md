@@ -43,6 +43,12 @@ Each register entry gives its address, bit fields and access types. The [notatio
 
 ## Board context
 
-The board observations in this edition use the Sipeed M1s Dock, with 64 MiB external PSRAM and 16 MiB SPI NOR. The D0 console is UART3 on GPIO16/17, connected to the dock's `/dev/ttyUSB0` channel at 2 Mbps. These are board and boot-configuration facts, not a statement that every BL808 design uses the same memory population or pins.
+The board observations in this edition use the Sipeed M1s Dock, with 64 MiB external PSRAM and 16 MiB SPI NOR. The current D0 console is UART3 on GPIO16/17, connected to the dock's `/dev/ttyUSB0` channel at **115200 8N1**, with a **40 MHz UART3 input clock**. OpenSBI, U-Boot and the tested Linux native console use that baud rate. USB device numbering can vary. These are board and boot-configuration facts, not a statement that every BL808 design uses the same memory population or pins.
+
+For [development RAM boots](/storage/ram-boot/), the host temporarily selects
+**2 Mbps for file transfer**, restores **115200 before Linux starts**, and
+keeps the UART3 input clock at 40 MHz throughout. New kernels can be tested
+without replacing the SD boot files. Earlier dated observations retain their
+original 2 Mbps console settings.
 
 The public reference contains established definitions and verified behavior. Laboratory notes and unresolved investigations are maintained separately from this site.

@@ -25,7 +25,25 @@ The TX and RX halves of `UART_BIT_PRD` contain independent bit-period values. Fo
 baud = UART source rate / (BIT_PRD + 1)
 ```
 
-The established M1s console configuration uses `UART_BIT_PRD = 0x00130013`, a divisor of 20 in each direction, and a source described as 40 MHz. The console exchanges commands at 2 Mbps. This verifies the usable serial setting; it is not an independent oscillator-frequency calibration.
+The current M1s Dock firmware initializes UART3 with a **40 MHz input clock**.
+OpenSBI, U-Boot and the tested Rust native Linux console use **115200 8N1**.
+This is the UART peripheral's input rate, separate from D0's CPU clock.
+
+| Use | Requested baud | Divisor in each direction | `UART_BIT_PRD` |
+| --- | --- | --- | --- |
+| Default console and Linux boot | 115200 | 347 | `0x015a015a` |
+| Temporary development file transfer | 2000000 | 20 | `0x00130013` |
+
+At 40 MHz, divisor 347 gives approximately 115274 baud, the rounded hardware
+setting for 115200. The [RAM boot loader](/storage/ram-boot/) changes only the
+bit period for image transfer, then restores and reads back the 115200 setting
+before starting Linux. The UART3 input remains 40 MHz throughout.
+
+Earlier 2026-10-21/22 observations below used a 2 Mbps default console. The
+new 115200 configuration was verified on 2026-10-24 with readable OpenSBI
+and U-Boot output, native Linux printk and `/dev/console` output, and a live
+Linux UART3 clock-provider rate of 40 MHz. These readbacks and serial tests
+are not an independent oscillator-frequency calibration.
 
 ## Polling FIFOs
 
@@ -70,6 +88,10 @@ Linux storage sessions used SBI `hvc0`; the separate native Linux UART
 follow-up below exercises the UART driver itself.
 
 ## Native Linux RX/TX and reopen
+
+This section records the earlier 2026-10-23 driver and its limits. The current
+115200 Rust native-console boot is recorded in
+[RAM boot verification](/storage/ram-boot/#verified-board-result).
 
 The 2026-10-23 follow-up used a local `bflb,uart` driver on current Linux
 base `a804c5742bff224d4cb4d25dd383554d598be32b`. The RAM DT supplied
@@ -135,8 +157,9 @@ The [RTC counter was initialized first](/clocks/rtc/#u-boot-delay-dependency)
 because the receiver's completion delay requires timer progress. The original
 CPU_RTC control word was restored after verification, and `version` answered
 again. The received data remained in RAM; the run performed no NOR writes.
-This establishes the recorded 1 KiB transfer, without extending the result to
-image-sized transfers or other serial protocols.
+This establishes that recorded 1 KiB S-record transfer. The later
+[image-sized RAM boot](/storage/ram-boot/) uses S-records to install a small
+receiver, then transfers binary images with block and whole-file CRC checks.
 
 ## M1s Dock boot readback
 

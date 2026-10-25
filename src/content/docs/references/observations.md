@@ -21,6 +21,7 @@ applies to the boot configuration and operation recorded for that session.
 | 2026-10-23 | M1s Dock, RAM Linux `7.3.0-ga804c5742bff-dirty` with local SDH/IRQ/clock drivers, initramfs | Native parent/child IRQ progress, PIO and SDMA pattern writes, independent reads and original/neighbor restoration passed; both 96 MHz and 95 MHz SDH parents were used |
 | 2026-10-23 | M1s Dock, current Linux `a804c574`, local native UART driver and RAM-only fixed-clock DT | Paced RX/TX comparisons at three baud rates and 100 actual last-close/open cycles passed; unpaced 1 Mbps RX exposed a hardware FIFO overrun |
 | 2026-10-23 | M1s Dock, powered card, warm-POR command probe and native Linux SDH comparison | Explicit initialization-clock generation changed first-CMD8 success from 0/7 to 7/7; native Linux first CMD8 and five re-probes succeeded after the change |
+| 2026-10-24 | M1s Dock, updated M0/firmware DTB/U-Boot and RAM Linux `7.3.0-g0b106a97216e-dirty` with Rust UART3 | OpenSBI, U-Boot and native Linux console worked at 115200 with a 40 MHz UART3 input clock; image upload used a temporary 2 Mbps setting and restored 115200 before Linux |
 
 ## Power-on and board-RESET readbacks
 
@@ -218,6 +219,31 @@ verified limitation: at 1 Mbps, a 255-byte transfer returned 102 bytes with
 a hardware FIFO overrun. Successful paced tests and builds do not establish
 continuous high-speed RX acceptance or upstream readiness. The test images
 were RAM-only and the existing persistent boot files were preserved.
+
+## RAM boot and 115200 default console
+
+The 2026-10-24 firmware update enabled the M0 UART0 log channel at 115200
+and set the D0 UART3 console defaults to 115200. M0, firmware DTB and
+U-Boot/header changes were written over the native OTG DFU service with
+backup and independent readback of 85 NOR sectors. OpenSBI itself was not
+reflashed; it read the updated firmware DTB. After software POR, readable
+OpenSBI and U-Boot output appeared on UART3 at 115200, while the separate
+UART0 channel reported M0 startup, D0 release and USB DFU readiness.
+
+The subsequent [development RAM boot](/storage/ram-boot/) sent a new Linux
+kernel, Linux DTB and initramfs over UART3. Its input clock remained 40 MHz;
+only the bit period temporarily selected 2 Mbps for transfer. Both host and
+board returned to 115200 before the kernel started. Complete-file RAM CRCs
+matched and the five existing SD file sizes/CRCs remained unchanged.
+
+Linux `7.3.0-g0b106a97216e-dirty` selected native `ttyS3` through DT stdout
+alone, emitted fresh printk and `/dev/console` markers, and passed the
+20-printk/64-TTY mixed-output check at 115200. The live UART3 clock-provider
+rate was 40 MHz. Independent postflight readback found `0x015a015a` in both
+UART3 and M0 UART0 bit-period registers; the Linux terminal reported 115200
+and M0 USB DFU remained available. The updated Linux was tested from RAM;
+the installed SD Linux files were not replaced. These are serial/readback
+observations, not an independent clock-pin measurement.
 
 ## Interpreting the results
 

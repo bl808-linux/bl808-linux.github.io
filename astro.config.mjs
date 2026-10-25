@@ -21,6 +21,7 @@ export default defineConfig({
       ] },
       { label: 'Boot & storage', items: [
         { label: 'Storage roles & boot', slug: 'storage/overview' },
+        { label: 'RAM boot for development', slug: 'storage/ram-boot' },
         { label: 'SPI NOR layout & updates', slug: 'storage/flash' },
         { label: 'SD card & Linux files', slug: 'storage/sd-card' },
       ] },
