@@ -5,24 +5,24 @@ import { sdExamples, sizeGiB } from '../data/sd-layout';
 <div class="sd-layout">
   <div class="table-scroll" tabindex="0" role="region" aria-label="SD card capacity examples">
     <table>
-      <thead><tr><th>Nominal card</th><th>Binary capacity</th><th>Control + Linux A/B</th><th>Debian rootfs</th><th>RAW</th></tr></thead>
+      <thead><tr><th>Nominal card</th><th>Binary capacity</th><th>BOOT</th><th>ROOTFS</th><th>EXCHANGE (RAW)</th></tr></thead>
       <tbody>{sdExamples.map(({ size, map }) => <tr>
-        <td>{size} GB</td><td>{sizeGiB(map.end)}</td><td>4 + 256 + 256 MiB</td>
+        <td>{size} GB</td><td>{sizeGiB(map.end)}</td><td>256 MiB</td>
         <td>{sizeGiB(map.regions.find(region => region.id === 'rootfs')!.end - map.regions.find(region => region.id === 'rootfs')!.start)}</td>
-        <td>{sizeGiB(map.regions.find(region => region.id === 'raw')!.end - map.regions.find(region => region.id === 'raw')!.start)}</td>
+        <td>512 MiB</td>
       </tr>)}</tbody>
     </table>
   </div>
-  <p>Front and tail metadata/alignment reserves are additional; all boundaries below use exclusive ends. Examples use nominal decimal capacity, so the installed card’s measured result can differ.</p>
-  <label class="sd-layout-selector" hidden>Show proposed card layout
-    <select id="sd-capacity" aria-label="Proposed SD capacity">
+  <p>The front 1 MiB and less than 1 MiB of tail alignment slack are additional; all boundaries below use exclusive ends. Examples use nominal decimal capacity, so the installed card’s measured result can differ.</p>
+  <label class="sd-layout-selector" hidden>Show MBR card layout
+    <select id="sd-capacity" aria-label="SD capacity example">
       {sdExamples.map(({ size }) => <option value={String(size)} selected={size === 128}>{size} GB</option>)}
     </select>
   </label>
   {sdExamples.map(({ size, map }) => <details class="sd-capacity-example" data-capacity={String(size)} open={size === 128}>
-    <summary>{size} GB · proposed boundaries and roles</summary>
+    <summary>{size} GB · MBR boundaries and roles</summary>
     <AllocationMap map={map} />
-    <div class="table-scroll" tabindex="0" role="region" aria-label={`${size} GB proposed sector boundaries`}>
+    <div class="table-scroll" tabindex="0" role="region" aria-label={`${size} GB MBR sector boundaries`}>
       <table><thead><tr><th>Region</th><th>Start LBA</th><th>End LBA, exclusive</th><th>Blocks</th></tr></thead>
         <tbody>{map.regions.map(region => <tr><td>{region.label}</td><td>{region.start / 512}</td><td>{region.end / 512}</td><td>{(region.end - region.start) / 512}</td></tr>)}</tbody>
       </table>

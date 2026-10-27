@@ -19,10 +19,10 @@ UART3 input clock; only the file-transfer phase temporarily uses 2 Mbps.
 ## System allocation at a glance
 
 RAM and NOR bars describe board-specific capacities and roles, not measured
-usage. The SD allocation is a **proposed design**: separate boot control,
-Linux A/B slots, shared Debian rootfs and a capacity-dependent RAW partition.
-The recorded native Linux storage tests used a RAM initramfs; they did not
-validate this proposed installation.
+usage. The host tool implements an **MBR three-partition layout**: BOOT 256 MiB,
+ROOTFS in the remaining space, and RAW EXCHANGE 512 MiB. Partition creation
+does not format filesystems. The recorded native Linux storage tests used a
+RAM initramfs; they did not validate this installation or Debian boot.
 
 <AllocationOverview />
 

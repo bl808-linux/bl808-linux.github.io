@@ -29,10 +29,10 @@ const firmwareBytes = flashMap.regions.filter(region => region.state === 'reserv
     <a href="/storage/flash/#boot-firmware-placement">Physical NOR layout →</a>
   </section>
   <section class="allocation-overview-card">
-    <small>04 / SD CARD · PLANNED</small>
+    <small>04 / SD CARD · HOST LAYOUT</small>
     <h3>Operating-system installation</h3>
-    <div class="allocation-summary-plan"><span>BOOTCTRL</span><span>Linux A / B</span><span>Debian</span><span>RAW</span></div>
-    <p>Proposed GPT: 4 MiB control, 256 MiB per kernel slot, up to 16 GiB Debian rootfs, then RAW. A 128 GB example leaves about 102.7 GiB RAW.</p>
-    <a href="/storage/sd-card/#planned-sd-allocation">Planned SD roles →</a>
+    <div class="allocation-summary-plan"><span>BOOT</span><span>ROOTFS</span><span>EXCHANGE</span></div>
+    <p>MBR: 256 MiB BOOT, the remaining space for ROOTFS, and 512 MiB RAW EXCHANGE. A 128 GB example gives about 118.46 GiB ROOTFS. Card deployment is not yet verified.</p>
+    <a href="/storage/sd-card/#current-sd-allocation">Current SD roles →</a>
   </section>
 </div>

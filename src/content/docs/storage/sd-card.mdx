@@ -1,6 +1,6 @@
 ---
 title: "SD card & Linux files"
-description: "Proposed GPT boot control, Linux A/B, Debian rootfs and capacity-dependent RAW layout, plus verified SDH behavior."
+description: "Current MBR layout: BOOT 256 MiB, remaining-space ROOTFS and RAW EXCHANGE 512 MiB, plus verified SDH behavior."
 ---
 
 import AllocationMap from '../../../components/AllocationMap.astro';
@@ -9,191 +9,149 @@ import { sdPlan } from '../../../data/allocations';
 
 The SD card is the operating-system medium in the M1s Dock storage layout.
 It holds Linux and its filesystems; OpenSBI and U-Boot remain in the
-[NOR boot chain](/storage/flash/). Kernel maintenance therefore changes SD files
-rather than replacing board firmware.
+[NOR boot chain](/storage/flash/).
 
-## Planned SD allocation
+## Current SD allocation
 
-**Design proposal, not the installed card layout.** Use GPT with five named
-partitions: BOOTCTRL, LINUX_A, LINUX_B, DEBIAN_ROOT and RAW. Kernel slots A/B
-share one Debian root filesystem. Keep OpenSBI and U-Boot in NOR. The recorded
-card instead used MBR/FAT32, and the native Linux tests below used RAM initramfs.
+The [host imager implementation](https://github.com/bl808-linux/imager/blob/9ae2f91/src/imager/sd.py)
+creates an **MBR table with three primary partitions**: BOOT, ROOTFS and
+EXCHANGE. This replaces the earlier five-partition proposal in this reference.
+The recorded card has not been migrated to this layout. The native Linux
+storage tests below used RAM initramfs; Debian boot remains unverified.
 
 <AllocationMap map={sdPlan} />
 
 ### Boot sectors and partition contract
 
-The SD boot sector is storage metadata, not another copy of the NOR boot
-chain. The chip boots from NOR; its U-Boot must understand the SD layout.
-Use 512-byte sectors, 1 MiB partition alignment and the following order:
+Use 512-byte sectors and 1 MiB alignment. The boot chain starts from NOR;
+LBA 0 on SD describes partitions rather than another board-firmware stage.
 
-| Location | Size / format | Owner and purpose |
+| Location | Size / type | Intended contents |
 | --- | --- | --- |
-| LBA 0 | 512 bytes, protective MBR | Identify the disk as GPT; no executable SD boot stage |
-| LBA 1 and 2–33 | Primary GPT header and 128-entry array | Partition names, type GUIDs and per-partition UUIDs |
-| Up to byte 1 MiB | Reserved front alignment | No kernel, control record or RAW payload here |
-| p1 `BOOTCTRL` | 4 MiB, unformatted | Redundant boot-selection records; distinct from application RAW |
-| p2 `LINUX_A` | 256 MiB, FAT32 | Kernel A, DTB, optional small initramfs, integrity manifest |
-| p3 `LINUX_B` | 256 MiB, FAT32 | Kernel B with the same file contract |
-| p4 `DEBIAN_ROOT` | Capacity policy below, ext4 | Shared Debian rootfs, both kernels’ modules, ordinary user files |
-| p5 `RAW` | Remaining aligned usable space, unformatted | Application-defined binary storage, never mounted as a filesystem |
-| Physical card tail | At least 1 MiB reserved | Alignment slack, backup GPT entry array and final-sector header |
+| LBA 0 | 512-byte MBR | Disk signature and primary partition entries |
+| Before byte 1 MiB | Front alignment | Outside the three partitions |
+| p1 BOOT | 256 MiB; type `0x0c` (FAT32 LBA) | Kernel, matching Linux DTB and optional initramfs |
+| p2 ROOTFS | Remaining aligned capacity; type `0x83` (Linux) | Debian ext4 rootfs, packages, modules and ordinary files |
+| p3 EXCHANGE | 512 MiB; type `0xda` (non-filesystem data) | RAW transfer space |
+| Physical card tail | Less than 1 MiB alignment slack | Outside the partitions; no backup partition table |
 
-Provision FAT slots with the GPT Basic Data type
-`ebd0a0a2-b9e5-4433-87c0-68b6b72699c7`, and Debian root with Linux filesystem
-type `0fc63daf-8483-4772-8e79-3d69d8477de4`. Reserve project-specific type GUIDs
-`cc6fbb10-9b4c-4fb0-89ed-d8c9f5646701` for BOOTCTRL and
-`cc6fbb10-9b4c-4fb0-89ed-d8c9f5646702` for RAW; these are proposed project
-identifiers, not standard types. Give every partition its own unique PARTUUID
-at provisioning. Discover it by type/name, then retain its PARTUUID in the
-installation manifest. Partition numbers document order; consumers must not
-silently select a different disk’s equally named partition.
+BOOT, ROOTFS and EXCHANGE are role names in this reference. MBR does not store
+those names or GPT type GUIDs. The host CLI selects these regions by partition
+number. It checks for overlap, card bounds and image size before writing;
+GPT and extended partition tables are currently rejected.
 
-GPT support does not require an EFI executable or an EFI System Partition.
-The proposed design uses U-Boot’s filesystem reads and the board’s Linux
-handoff. U-Boot documents [GPT descriptors and type GUIDs](https://docs.u-boot.org/en/latest/usage/cmd/gpt.html)
-and [partition-boundary queries](https://docs.u-boot.org/en/latest/usage/cmd/part.html).
+`sd partition` is for preparing a new card: it replaces the MBR after backing
+up the original sector and independently verifies the replacement. **It only
+writes the partition table; it does not format BOOT or ROOTFS, clear EXCHANGE,
+or install Linux files.** A FAT32 partition type alone is not a FAT filesystem.
+The read/write commands use the existing table without resizing it.
+
+```sh
+uv run imager sd info
+uv run imager sd partition
+uv run imager sd read --partition 3 --output exchange.img
+uv run imager sd write --partition 2 --input out/debian/rootfs.img
+```
+
+Read saves the selected partition to a new file. Write accepts a nonempty
+image containing complete 512-byte blocks, backs up the entire changed range
+before the first write, then programs and independently rereads chunks of up
+to 4 KiB. The write remains inside the selected partition. The host retains
+backups under `out/sd/backup-*`; failures do not request a reboot.
 
 ### Capacity policy
 
-Use the **measured sector count**, not the card label, when provisioning.
-For total bytes `C = sector_count × 512`, calculate:
+The host reads the **actual sector count** from M0. For total bytes
+`C = sector_count × 512`, its calculation is:
 
 ```text
-MiB = 1,048,576 bytes; GiB = 1,073,741,824 bytes
-usable_end  = floor((C - MiB) / MiB) × MiB       # exclusive; reserve card tail
-root_start  = (1 + 4 + 256 + 256) × MiB         # 517 MiB
-remaining   = usable_end - root_start
-root_size   = min(16 GiB, floor(0.75 × remaining / GiB) × GiB)
-raw_start   = root_start + root_size
-raw_size    = usable_end - raw_start
+MiB = 1,048,576 bytes
+usable_end    = floor(C / MiB) × MiB           # exclusive
+boot_start    = MiB
+boot_size     = 256 × MiB
+root_start    = boot_start + boot_size        # 257 MiB, LBA 526336
+exchange_size = 512 × MiB
+exchange_start = usable_end - exchange_size
+root_size     = exchange_start - root_start
+tail_slack    = C - usable_end                # 0 to less than 1 MiB
 ```
 
-The default examples target **8 GB cards and larger, through 2 TiB**, within
-the current M0 path’s 32-bit LBA space. A card sold as 8 GB may report a slightly
-different capacity; judge its measured geometry. Require at least 4 GiB rootfs
-and 1 GiB RAW. Reject an
-undersized card; do not silently shrink kernel slots or overlap the tail.
-On smaller cards, allocate roughly three quarters of the post-slot capacity
-to Debian, rounded down to whole GiB. Cap rootfs at 16 GiB so larger cards
-add RAW capacity without moving the earlier partition starts.
+BOOT and EXCHANGE have fixed sizes. ROOTFS receives all aligned space between
+them, without a 16 GiB cap. A larger card increases ROOTFS and moves EXCHANGE
+toward the card end. Its boundary must be read from that card's table rather
+than copied from another-capacity example. No fixed tail reserve is required.
 
-For a nominal **128 GB** card, the design uses **16 GiB Debian rootfs** and
-approximately **102.70 GiB RAW**. RAW begins at **16,901 MiB**
-(`17,721,982,976` bytes, LBA `34,613,248`); its end comes from the measured
-card capacity. A 128 GB label is about 119.21 GiB, not 128 GiB.
-
-This is the default binary-storage profile, not a claim that Debian needs
-16 GiB. Ordinary documents and packages use ext4; RAW is reserved for consumers
-that need block storage. Adjust the 16 GiB cap before provisioning if normal
-files need more space. Changing that cap later moves the RAW boundary and
-requires backing up and recreating affected partitions. Never automatically
-resize an existing installation when a different-capacity card is detected.
+The current transport accepts up to `2^32` 512-byte sectors, or **2 TiB**.
+Reject capacities that leave no positive aligned ROOTFS region. This geometry
+check is not a minimum Debian size check: the prepared image must also fit
+inside the selected partition. A nominal 128 GB card gives approximately
+**118.46 GiB ROOTFS** and **512 MiB EXCHANGE**. GB is decimal; GiB is binary.
+Actual cards may report a different sector count from their nominal label.
 
 <SDLayout />
 
-### A/B kernel update and recovery
+### Boot files and recovery
 
-Each FAT slot holds `/Image.gz`, `/board.dtb`, optional `/initramfs.gz`, and
-`/manifest.json` with kernel release, file lengths and SHA-256 hashes. The
-loader must enforce RAM loading/decompression bounds as well as the FAT slot
-capacity. A 256 MiB slot does not imply that a 256 MiB image can run in 64 MiB
-RAM. Use the shared root through `root=PARTUUID=… rootwait`; the matching SDH,
-partition and ext4 support must be built into the kernel or the small initramfs.
+BOOT is a single intended FAT32 boot partition. Keep the kernel, its Linux
+DTB and matching modules consistent. Loading and decompression must fit the
+live RAM map; a 256 MiB partition does not imply that a 256 MiB kernel can run
+in 64 MiB RAM. The partition command does not populate this filesystem or
+configure automatic U-Boot boot selection.
 
-1. Keep the confirmed slot unchanged. Write the candidate’s matching modules
-   into `/lib/modules/<release>/` on Debian root, then populate the inactive
-   FAT slot. Keep the previous kernel’s modules. Distinct kernel builds must
-   use distinct release strings so a candidate cannot replace fallback modules.
-2. Flush writes, independently read back the files and verify their manifest
-   before publishing a pending slot. Failed staging leaves the confirmed slot
-   selected.
-3. BOOTCTRL holds two 4 KiB records at partition-relative offsets 0 and 1 MiB.
-   Records carry a magic/version, monotonically increasing sequence number,
-   confirmed slot, optional pending slot, remaining attempts and CRC32. Update
-   the older record, flush, then read it back. Select the newest valid record;
-   a torn write must leave the other valid copy usable. CRC detects corruption,
-   not authenticity.
-4. Allow three candidate attempts. Persist the decremented count **before**
-   entering the candidate, and arm a hardware watchdog so a hung kernel causes
-   a retry. A load/hash failure immediately selects the confirmed slot; an
-   exhausted attempt count clears pending and returns to confirmed.
-5. Linux marks the pending slot confirmed only after mounting the expected
-   rootfs, checking its release/modules, reaching required userspace services
-   and verifying SD reads. Write a new valid control record to confirm it.
-   A displayed kernel banner alone is not success.
-
-Provision a valid record with A confirmed after installation verification.
-If both BOOTCTRL records are invalid, or both boot slots fail, stop at the
-U-Boot recovery console; provide a manual slot choice rather than guessing
-which corrupted state was intended. The boot-selection logic belongs to the
-NOR U-Boot build so a damaged shared SD script cannot disable both slots.
-
-This is **kernel A/B**, not whole-system A/B. An `apt` upgrade, incompatible
-module replacement or corruption of the shared Debian rootfs affects both
-slots. Whole-rootfs rollback would require separate rootfs A/B or another
-explicit snapshot design. U-Boot’s documented
-[boot-count mechanism](https://docs.u-boot.org/en/latest/api/bootcount.html)
-provides retry primitives; the redundant BOOTCTRL protocol above is a proposed
-integration and has not been implemented or power-loss tested here.
+No separate boot-control partition, automatic slot switch, watchdog retry or
+rollback protocol is implemented by this layout. The recorded recovery path
+is the installed U-Boot console and [RAM boot for development](/storage/ram-boot/).
+The kernel and rootfs boot integration still needs board validation.
 
 ### Debian rootfs target
 
-Prepare a minimal `riscv64` Debian userland on a host and copy it to ext4; use
-the board-specific kernel and DTB in the selected FAT slot. The generic Debian
-installer and stock kernel are not established BL808 boot paths. Debian’s
+The [host Debian builder](https://github.com/bl808-linux/imager/blob/9ae2f91/src/imager/build.py)
+prepares a `riscv64` ext4 image at `out/debian/rootfs.img`. Image creation and
+filesystem checks have passed on the host. Writing that image to p2 does not
+automatically expand its filesystem to the full partition capacity; filesystem
+growth is a separate step. Use the board-specific kernel and DTB in BOOT.
+
+The generic Debian installer and stock kernel are not established BL808 boot
+paths. Debian's
 [published headless installation guidance](https://www.debian.org/releases/trixie/riscv64/ch03s04.en.html)
-lists 512 MB minimum RAM, above this board’s 64 MiB. Thus the minimal userland,
+lists 512 MB minimum RAM, above this board's 64 MiB. Thus the minimal userland,
 init/services and package-management memory demand remain bring-up work, not
-a claim of a validated Debian system. Keep initramfs compact and measure
-runtime memory before enabling additional services. No swap partition or
-automatic swap use of RAW is assigned by this layout.
+a claim of a validated Debian system. No swap partition or automatic swap use
+of EXCHANGE is assigned by this layout.
 
-### RAW region ownership and format
+### EXCHANGE region ownership and format
 
-RAW is a named GPT partition, **not** an unpartitioned tail or free filesystem
-clusters. Treat it as opaque application storage: binary captures, log records
-or another explicitly defined block format. Normal user files remain on ext4.
-The initial installation reserves RAW without formatting it; no payload writer
-is enabled until the application chooses its on-disk format.
+EXCHANGE is the third MBR partition: **512 MiB of RAW transfer space**.
+It is not a mounted filesystem or an unpartitioned tail. It is intended for
+staging packages such as `.deb` files and other host/board payloads. Package
+framing, filenames, exact byte lengths, integrity metadata and a board-side
+receiver have not yet been defined. The raw read/write commands alone are
+not a file-copy or package-installation protocol.
 
-- Open the verified partition by PARTUUID. Discover `raw_start_lba` and
-  `raw_block_count` from its GPT entry. Convert a partition-relative block `r`
-  to disk LBA `raw_start_lba + r` only after checking the requested range fits.
-  Use 64-bit arithmetic, then enforce the transport’s 32-bit LBA limit.
-- Reserve the first and last 1 MiB **inside RAW** for future redundant format
-  metadata. Application payload starts at relative 1 MiB and ends 1 MiB before
-  the partition end. Payload format, record size, checksums and retention are
-  application-defined; consumers must reject an unknown magic/version rather
-  than treating unknown bytes as an empty log.
-- Use partition-relative offsets in any future format metadata. Extra space
-  on a larger card increases the payload capacity; it does not move control,
-  A/B or Debian partitions once the 16 GiB rootfs cap is reached. Copying an
-  installation to another-size card still requires deliberate GPT/tail repair
-  and capacity checks; it is not an automatic expansion operation.
-- Linux and M0 must have one controller owner at a time. The current M0 path
-  holds D0 stopped for block transfers; it does not coordinate with a running
-  Debian rootfs. Use it only while the OS is stopped and filesystems are cleanly
-  quiesced. A dedicated RAW partition does not make simultaneous SDH access safe.
+Use the partition's actual start LBA and block count. A larger card changes
+its start, while its size stays fixed. No application payload-header or
+reserved metadata subregions are assigned inside EXCHANGE yet. Normal
+installed files belong on ROOTFS.
+
+Linux and M0 must have one SDH controller owner at a time. The M0 path holds
+D0 stopped for block transfers; it does not coordinate with a running Debian
+rootfs. Start maintenance with the OS stopped and its filesystems quiesced.
+A dedicated EXCHANGE partition does not make simultaneous SDH access safe.
 
 ### Compatibility and implementation status
 
-This change documents and calculates the design; it does not repartition a
-card, change firmware or enable automatic slot switching.
-
-| Component | Current inspected behavior | Needed before using this design |
+| Component | Implemented or observed | Still required |
 | --- | --- | --- |
-| U-Boot | DOS/MBR, FAT reads/writes; `CONFIG_ENV_IS_NOWHERE`; no GPT or bootcount enabled | GPT reader (`CONFIG_EFI_PARTITION`), partition queries (`CONFIG_CMD_PART`), manifest validation and bounded image loads, redundant BOOTCTRL reader/writer, watchdog and fallback policy; `CONFIG_CMD_GPT` if provisioning/verifying in U-Boot |
-| Linux | Diagnostic initramfs; GPT parsing enabled, ext4 not enabled in the inspected image | Early SDH/IRQ/clock support, ext4 support, PARTUUID root selection, minimal Debian startup and confirmation service |
-| Host FAT inspector | Exactly one MBR FAT32 partition | GPT-aware explicit slot selection; the existing single-FAT assumption rejects this layout |
-| M0/host raw transport | Capacity-bounded block access; no GPT partition policy | Validate selected RAW partition bounds as well as whole-card bounds; do not reuse unrestricted whole-card writes as a RAW-only API |
+| Host partition command | MBR three-partition calculation, original-sector backup and readback; host tests and independent table parsing pass | Provision and verify a new physical card; format BOOT and install boot files |
+| Host read/write | Select primary MBR partitions; validate bounds; back up changed blocks; independently reread writes | Full-image deployment validation on a physical card |
+| Debian builder | Host-generated ext4 rootfs image | Filesystem growth when needed; SD root boot and userspace validation on this board |
+| U-Boot | Recorded MBR/FAT access and RAM boot | Boot-file and rootfs handoff for the new layout |
+| EXCHANGE | Fixed RAW partition and bounded block I/O | Defined package-transfer metadata and board-side receive/install workflow |
 
-Before adopting it, verify GPT discovery and both FAT slots, boot each kernel
-with matching modules, interrupt inactive-slot and BOOTCTRL updates at each
-write boundary, exhaust three failed attempts, exercise watchdog recovery,
-test undersized/different-capacity cards and prove RAW first/last-block writes
-preserve neighboring Debian and backup-GPT sectors. Existing readback tests
-below validate the recorded SDH behavior, not these future A/B guarantees.
+The capacity examples and host tests establish the implemented geometry and
+bounds. The recorded SDH observations below establish their specific board
+read/write results; they do not establish that this new card layout or Debian
+installation has been deployed successfully.
 
 ## Operating-system contents
 

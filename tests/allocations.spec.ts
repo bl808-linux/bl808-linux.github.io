@@ -34,32 +34,42 @@ test('invalid overlapping allocations fail rather than rendering a misleading ga
   })).toThrow(/overlapping/);
 });
 
-test('SD profiles preserve fixed slots, reserve GPT tails and scale RAW from real capacity', () => {
-  expect(sdExamples.map(({ map }) => {
-    const root = map.regions.find(region => region.id === 'rootfs')!;
-    return (root.end - root.start) / GiB;
-  })).toEqual([5, 10, 16, 16, 16, 16]);
+test('SD MBR layout fixes BOOT and EXCHANGE and gives remaining aligned space to ROOTFS', () => {
   const nominal = designSD(128_000_000_000);
   const measured = designSD(128_000_000_000 - MiB, 'measured');
-  for (const map of [nominal, measured, designSD(2 ** 41)]) {
+  for (const map of [...sdExamples.map(example => example.map), measured, designSD(2 ** 41)]) {
+    const boot = map.regions.find(region => region.id === 'boot')!;
     const root = map.regions.find(region => region.id === 'rootfs')!;
-    const raw = map.regions.find(region => region.id === 'raw')!;
-    expect(root.start).toBe(542_113_792); // 517 MiB
-    expect(raw.start).toBe(17_721_982_976); // 16 GiB + 517 MiB
-    expect(raw.start / 512).toBe(34_613_248);
-    expect(map.end - raw.end).toBeGreaterThanOrEqual(MiB);
-    expect(map.end - raw.end).toBeLessThan(2 * MiB);
-    expect((raw.end - raw.start) % MiB).toBe(0);
-    expect(raw.end / 512).toBeLessThanOrEqual(2 ** 32);
-    for (const id of ['linux-a', 'linux-b']) {
-      const slot = map.regions.find(region => region.id === id)!;
-      expect(slot.end - slot.start).toBe(256 * MiB);
+    const exchange = map.regions.find(region => region.id === 'exchange')!;
+    expect(boot.start).toBe(MiB);
+    expect(boot.end - boot.start).toBe(256 * MiB);
+    expect(root.start).toBe(269_484_032); // 257 MiB, LBA 526336
+    expect(root.end).toBe(exchange.start);
+    expect(root.end).toBeGreaterThan(root.start);
+    expect(exchange.end - exchange.start).toBe(512 * MiB);
+    expect(exchange.end).toBe(Math.floor(map.end / MiB) * MiB);
+    expect(map.end - exchange.end).toBeGreaterThanOrEqual(0);
+    expect(map.end - exchange.end).toBeLessThan(MiB);
+    expect(exchange.end / 512).toBeLessThanOrEqual(2 ** 32);
+    for (const region of [boot, root, exchange]) {
+      expect(region.start % MiB).toBe(0);
+      expect(region.end % MiB).toBe(0);
     }
+    expect(map.regions.filter(region => ['boot', 'rootfs', 'exchange'].includes(region.id))).toHaveLength(3);
   }
-  expect(nominal.regions.find(region => region.id === 'raw')!.end
-    - measured.regions.find(region => region.id === 'raw')!.end).toBe(MiB);
-  expect(() => designSD(8_000_000_000 - MiB)).not.toThrow();
-  for (const invalid of [0, 4_000_000_000, 128_000_000_001, 2 ** 41 + 512, NaN, Infinity]) {
+  const root = nominal.regions.find(region => region.id === 'rootfs')!;
+  expect(root.end - root.start).toBe(127_193_317_376);
+  expect(root.end / 512).toBe(248_950_784);
+  expect(root.end - root.start).toBeGreaterThan(16 * GiB);
+  expect(root.end - measured.regions.find(region => region.id === 'rootfs')!.end).toBe(MiB);
+  expect(designSD(2 ** 41).regions.some(region => region.id === 'tail')).toBe(false);
+});
+
+test('SD capacity checks match the host geometry limits without promising image fit', () => {
+  const smallest = designSD(770 * MiB);
+  const root = smallest.regions.find(region => region.id === 'rootfs')!;
+  expect(root.end - root.start).toBe(MiB);
+  for (const invalid of [0, -512, 769 * MiB, 770 * MiB - 512, 128_000_000_001, 2 ** 41 + 512, NaN, Infinity]) {
     expect(() => designSD(invalid)).toThrow();
   }
 });
@@ -90,16 +100,22 @@ test('eight-byte Flash header has an accessible legend and exact proportional wi
   await expect(header.getByRole('link')).toBeFocused();
 });
 
-test('SD capacity selection changes the proposed geometry and labels it as design', async ({ page }) => {
+test('SD capacity selection shows the implemented MBR layout without claiming deployment', async ({ page }) => {
   await page.goto('/storage/sd-card/#capacity-policy');
-  const select = page.getByRole('combobox', { name: 'Proposed SD capacity' });
+  const select = page.getByRole('combobox', { name: 'SD capacity example' });
   await expect(select).toHaveValue('128');
   await expect(page.locator('#sd-128')).toBeVisible();
-  await expect(page.locator('#sd-128-raw')).toContainText('0x420500000');
+  await expect(page.locator('#sd-128-exchange')).toContainText('512 MiB');
+  await expect(page.locator('#sd-128-rootfs')).toContainText('118.458 GiB');
+  await expect(page.locator('#sd-plan-boot')).toBeVisible();
+  await expect(page.locator('#sd-plan-exchange')).toBeVisible();
+  await expect(page.locator('#sd-plan-control, #sd-plan-linux-a, #sd-plan-linux-b')).toHaveCount(0);
   await select.selectOption('8');
   await expect(page.locator('#sd-128')).toBeHidden();
-  await expect(page.locator('#sd-8-rootfs')).toContainText('5 GiB');
-  await expect(page.locator('#sd-8')).toContainText('not observed contents');
+  await expect(page.locator('#sd-8-rootfs')).toContainText('6.699 GiB');
+  await expect(page.locator('#sd-8')).toContainText('not observed card contents');
+  await expect(page.locator('#sd-8')).toContainText('Host implementation');
+  await expect(page.getByText('It only writes the partition table', { exact: false })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Compatibility and implementation status' })).toBeAttached();
 });
 
@@ -114,6 +130,6 @@ test('allocation diagrams remain usable on mobile and without JavaScript', async
   const smallCard = page.locator('.sd-capacity-example[data-capacity="8"]');
   await smallCard.locator('summary').click();
   await expect(page.locator('#sd-8-rootfs')).toBeVisible();
-  await expect(page.getByRole('combobox', { name: 'Proposed SD capacity' })).toBeHidden();
+  await expect(page.getByRole('combobox', { name: 'SD capacity example' })).toBeHidden();
   await context.close();
 });

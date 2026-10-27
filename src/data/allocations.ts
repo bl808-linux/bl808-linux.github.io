@@ -7,13 +7,13 @@ export type Allocation = {
   state: AllocationState;
   description: string;
   evidence: Evidence;
-  role?: 'metadata' | 'control' | 'linux-a' | 'linux-b' | 'rootfs' | 'raw';
+  role?: 'metadata' | 'boot' | 'rootfs' | 'exchange';
 };
 export type Region = Allocation & { start: number; end: number };
 export type Marker = Allocation & { address: number };
 type MapBase = { id: string; title: string; note: string };
 export type RangeMap = MapBase & {
-  kind: 'range'; start: number; end: number; unit: 'CPU address' | 'Physical NOR offset' | 'Proposed SD byte offset'; regions: Region[];
+  kind: 'range'; start: number; end: number; unit: 'CPU address' | 'Physical NOR offset' | 'SD byte offset'; regions: Region[];
 };
 export type MarkerMap = MapBase & {
   kind: 'markers'; start: number; end: number; unit: 'CPU address'; markers: Marker[];
@@ -24,7 +24,7 @@ export type AllocationMap = RangeMap | MarkerMap | LogicalMap;
 export const stateLabels: Record<AllocationState, string> = {
   reserved: 'Reserved capacity', temporary: 'Boot-time use', observed: 'Observed reservation',
   managed: 'OS-managed memory', unassigned: 'Unassigned in this layout',
-  unknown: 'Contents not enumerated', planned: 'Proposed · not installed',
+  unknown: 'Contents not enumerated', planned: 'Not installed on recorded card',
 };
 
 export function hex(value: number): string { return `0x${value.toString(16).padStart(8, '0')}`; }
@@ -152,14 +152,12 @@ export const flashMap = rangeMap({
   description: 'No role is assigned by this documented layout. This does not establish erased contents, a recovery bank or permission to overwrite an installed image. Older bundles may retain other data here.', evidence: flashEvidence });
 
 export const sdPlan: LogicalMap = {
-  id: 'sd-plan', kind: 'logical', title: 'SD card · proposed GPT installation',
-  note: 'Roles in address order, not size ratios. Capacity examples below calculate exact boundaries; this layout is not installed on the recorded card.',
+  id: 'sd-plan', kind: 'logical', title: 'SD card · current MBR provisioning layout',
+  note: 'Roles in address order, not size ratios. The host tool implements this layout; installation on the recorded card and Debian boot remain unverified.',
   items: [
-    { id: 'control', label: 'BOOTCTRL · 4 MiB', role: 'control', state: 'planned', description: 'Dedicated raw boot-selection state, with two redundant records. Protective MBR/GPT and alignment space are outside this partition.', evidence: { label: 'Boot metadata design', href: '/storage/sd-card/#boot-sectors-and-partition-contract' } },
-    { id: 'linux-a', label: 'LINUX_A · 256 MiB', role: 'linux-a', state: 'planned', description: 'FAT32 kernel slot A: matching kernel, DTB, optional small initramfs and an integrity manifest.', evidence: { label: 'A/B update design', href: '/storage/sd-card/#ab-kernel-update-and-recovery' } },
-    { id: 'linux-b', label: 'LINUX_B · 256 MiB', role: 'linux-b', state: 'planned', description: 'Same size and file contract as A. Stage updates in the inactive slot and keep the confirmed slot intact.', evidence: { label: 'A/B update design', href: '/storage/sd-card/#ab-kernel-update-and-recovery' } },
-    { id: 'rootfs', label: 'Debian rootfs · up to 16 GiB', role: 'rootfs', state: 'planned', description: 'Shared ext4 root, packages, matching modules for both retained kernels and ordinary user files. Smaller cards receive a smaller rootfs.', evidence: { label: 'Capacity policy', href: '/storage/sd-card/#capacity-policy' } },
-    { id: 'raw', label: 'RAW · remaining capacity', role: 'raw', state: 'planned', description: 'Named, unformatted partition for application-defined binary records. Discover its GPT boundaries instead of hard-coding an offset for a 128 GB card.', evidence: { label: 'RAW access contract', href: '/storage/sd-card/#raw-region-ownership-and-format' } },
+    { id: 'boot', label: 'p1 BOOT · 256 MiB', role: 'boot', state: 'planned', description: 'Intended FAT32 boot files: kernel, matching Linux DTB and optional initramfs. Partition creation does not format this region.', evidence: { label: 'MBR partition contract', href: '/storage/sd-card/#boot-sectors-and-partition-contract' } },
+    { id: 'rootfs', label: 'p2 ROOTFS · remaining space', role: 'rootfs', state: 'planned', description: 'Intended ext4 Debian root, packages, matching modules and ordinary files. Its partition fills the space between BOOT and EXCHANGE; filesystem image size is separate.', evidence: { label: 'Capacity policy', href: '/storage/sd-card/#capacity-policy' } },
+    { id: 'exchange', label: 'p3 EXCHANGE · 512 MiB RAW', role: 'exchange', state: 'planned', description: 'Fixed-size unformatted transfer space. Its start depends on the measured card capacity. The file-transfer format is not yet implemented.', evidence: { label: 'EXCHANGE contract', href: '/storage/sd-card/#exchange-region-ownership-and-format' } },
   ],
 };
 

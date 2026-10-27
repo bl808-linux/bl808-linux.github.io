@@ -18,17 +18,18 @@ first with `npx playwright install chromium`.
 Pages live in `src/content/docs`. Register data lives in `src/data/registers.json`;
 the shared register component renders metadata, bit diagrams and field tables.
 Published hardware claims describe established definitions and verified behavior.
-Proposed installation layouts are explicitly labeled and kept distinct from
+Host provisioning layouts are explicitly labeled and kept distinct from
 observed board behavior. Experimental notes, raw laboratory records and unresolved
 hardware claims stay outside the published site. See Board observations and
 Reading the reference for measurement context and notation.
 
-Allocation diagrams use `src/data/allocations.ts`; proposed SD capacity examples
+Allocation diagrams use `src/data/allocations.ts`; MBR three-partition capacity examples
 are calculated by `src/data/sd-layout.ts`. These static data modules have no
 dependency on the imager/firmware checkouts and never access or repartition a
 card. When revising the SD policy, update the explanatory contract and capacity
-tests together. Kernel A/B shares a single Debian rootfs; it does not promise
-whole-system rollback.
+tests together. The current host layout has BOOT 256 MiB, ROOTFS in the remaining
+space, and RAW EXCHANGE 512 MiB. It defines no automatic A/B rollback or exchange
+file protocol. Card provisioning and Debian boot remain unverified.
 
 ## GitHub Pages deployment
 

@@ -121,11 +121,9 @@ body { font-feature-settings: 'ss01'; }
 .allocation-unassigned, .allocation-unknown { background: repeating-linear-gradient(135deg, var(--sl-color-gray-5) 0 5px, var(--sl-color-gray-6) 5px 8px); color: var(--sl-color-white); }
 .allocation-planned { background: repeating-linear-gradient(135deg, #455da7 0 6px, #354b91 6px 9px); color: #fff; }
 .allocation-role-metadata { background: repeating-linear-gradient(135deg, #596478 0 5px, #454e60 5px 8px); color: #fff; }
-.allocation-role-control { background: #596478; color: #fff; }
-.allocation-role-linux-a { background: #3153b4; color: #fff; }
-.allocation-role-linux-b { background: #75449e; color: #fff; }
+.allocation-role-boot { background: #3153b4; color: #fff; }
 .allocation-role-rootfs { background: #207760; color: #fff; }
-.allocation-role-raw { background: #9b521a; color: #fff; }
+.allocation-role-exchange { background: #9b521a; color: #fff; }
 .allocation-legend { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1.3rem; margin-top: 1rem !important; }
 .allocation-legend > li { padding-block: .85rem; border-top: 1px solid var(--ref-line); min-width: 0; max-width: none; scroll-margin-top: 7rem; }
 .allocation-legend > li:target { background: var(--sl-color-accent-low); outline: 2px solid var(--sl-color-accent); outline-offset: .3rem; border-radius: .15rem; }
